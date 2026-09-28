@@ -1,0 +1,442 @@
+{
+  "protocol_version": "0.1.0",
+  "mission_id": "mission-unknown-outcome-completed-0001",
+  "records": [
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "mission",
+      "record_id": "mission-unknown-outcome-completed-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:00Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+      "operation_id": "operation-unknown-outcome-completed-0001",
+      "observation_scope": [
+        "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+        "urn:example:tacp:unknown-outcome-completed:evidence:conditional-update-contract"
+      ],
+      "authorization_ref": "urn:example:tacp:unknown-outcome-completed:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:unknown-outcome-completed:policy:demo-v1",
+      "limits": {
+        "max_review_rounds": 2,
+        "deadline_at": "2026-09-28T02:05:00Z",
+        "max_observation_age_seconds": 60,
+        "max_execution_attempts": 1,
+        "resource_budgets": [
+          {
+            "budget_id": "work",
+            "unit": "work_units",
+            "limit": 20
+          }
+        ]
+      },
+      "expected_results": [
+        {
+          "condition_id": "expected-value-one",
+          "description": "The target value equals 1."
+        }
+      ],
+      "stop_conditions": [
+        {
+          "condition_id": "stop-unexpected-change",
+          "description": "A data field other than value changed, excluding the expected revision-token update."
+        }
+      ]
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "observation",
+      "record_id": "observation-before-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:02Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "pre_execution",
+      "observed_at": "2026-09-28T02:00:01Z",
+      "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r1"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:unknown-outcome-completed:evidence:store-before",
+          "retrieved_at": "2026-09-28T02:00:01Z"
+        },
+        {
+          "source_ref": "urn:example:tacp:unknown-outcome-completed:evidence:conditional-update-contract",
+          "retrieved_at": "2026-09-28T02:00:01Z"
+        }
+      ],
+      "facts": [
+        "The target snapshot contains value=0, sentinel=unchanged, and revision=r1.",
+        "The runtime contract supports an atomic revision comparison and a single-field update.",
+        "A revision mismatch rejects the mutation without changing the target."
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "assessment",
+      "record_id": "assessment-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:03Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "revision": 1,
+      "observation_refs": [
+        "observation-before-0001"
+      ],
+      "action": {
+        "operation_id": "operation-unknown-outcome-completed-0001",
+        "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "rationale": "The observed value is 0. A conditional single-field update can set it to 1 while rejecting a changed revision.",
+      "prerequisites": [
+        {
+          "prerequisite_id": "revision-current",
+          "description": "The target revision remains r1 through dispatch.",
+          "check_ref": "urn:example:tacp:unknown-outcome-completed:check:revision-equals-r1"
+        }
+      ],
+      "open_issues": [],
+      "recommendation": "ready"
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "review",
+      "record_id": "review-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:04Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "round": 1,
+      "assessment_ref": "assessment-0001",
+      "questions": [
+        "Could the target change after observation?",
+        "Could the proposed action modify another data field?"
+      ],
+      "checks_performed": [
+        {
+          "question": "Could the target change after observation?",
+          "method": "Compare the observed revision, action parameters, and runtime contract.",
+          "finding": "The action supplies expected_revision=r1; the runtime rejects a mismatch atomically at dispatch.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ]
+        },
+        {
+          "question": "Could the proposed action modify another data field?",
+          "method": "Inspect the action field selection and the runtime contract.",
+          "finding": "Only value is selected for mutation; outcome verification must compare sentinel against the observed baseline.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ]
+        }
+      ],
+      "reused_observation_refs": [
+        "observation-before-0001"
+      ],
+      "new_observation_refs": [],
+      "issue_updates": [],
+      "remaining_blocking_issues": [],
+      "decision": "pass",
+      "decision_change": "initial",
+      "change_reason": "The initial challenge supports conditional execution. Existing evidence was reexamined; no new independent corroboration is claimed."
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "gate",
+      "record_id": "gate-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:05Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "assessment_ref": "assessment-0001",
+      "review_ref": "review-0001",
+      "action": {
+        "operation_id": "operation-unknown-outcome-completed-0001",
+        "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "authorization_ref": "urn:example:tacp:unknown-outcome-completed:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:unknown-outcome-completed:policy:demo-v1",
+      "checked_at": "2026-09-28T02:00:05Z",
+      "valid_until": "2026-09-28T02:00:30Z",
+      "checks": {
+        "reference_integrity": "pass",
+        "review_passed": "pass",
+        "authorization_valid": "pass",
+        "scope_match": "pass",
+        "observation_fresh": "pass",
+        "target_state_match": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass",
+        "stop_conditions_clear": "pass",
+        "operation_available": "pass"
+      },
+      "prerequisite_results": [
+        {
+          "prerequisite_id": "revision-current",
+          "result": "pass",
+          "evidence_ref": "observation-before-0001"
+        }
+      ],
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 4,
+          "reserved": 5
+        }
+      ],
+      "enforcement_ref": "urn:example:tacp:unknown-outcome-completed:runtime:conditional-update-v1",
+      "decision": "allow",
+      "reasons": [
+        "The fixture authorization permits the exact conditional update.",
+        "Revision r1 is current; atomic dispatch will enforce it again.",
+        "The resource reservation covers execution, verification, and closure bookkeeping."
+      ]
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "execution",
+      "record_id": "execution-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:08Z",
+      "producer_id": "example-executor-01",
+      "producer_role": "executor",
+      "gate_ref": "gate-0001",
+      "assessment_ref": "assessment-0001",
+      "action": {
+        "operation_id": "operation-unknown-outcome-completed-0001",
+        "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "started_at": "2026-09-28T02:00:06Z",
+      "finished_at": "2026-09-28T02:00:07Z",
+      "attempt": 1,
+      "reservation_ref": "urn:example:tacp:unknown-outcome-completed:reservation:operation-unknown-outcome-completed-0001",
+      "outcome": "unknown",
+      "reported_effects": [],
+      "uncertainties": [
+        "The dispatch timed out without a definitive action response. The executor cannot confirm the outcome of this specific attempt."
+      ],
+      "result_refs": [
+        "urn:example:tacp:unknown-outcome-completed:result:operation-unknown-outcome-completed-0001"
+      ]
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "observation",
+      "record_id": "observation-after-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:09Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "post_execution",
+      "observed_at": "2026-09-28T02:00:09Z",
+      "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r2"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:unknown-outcome-completed:evidence:store-after",
+          "retrieved_at": "2026-09-28T02:00:09Z"
+        }
+      ],
+      "facts": [
+        "The target snapshot contains value=1, sentinel=unchanged, and revision=r2.",
+        "Compared with the pre-execution snapshot, only value and the expected revision token changed."
+      ],
+      "uncertainties": [],
+      "execution_ref": "execution-0001"
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "verification",
+      "record_id": "verification-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:10Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "execution_ref": "execution-0001",
+      "observation_refs": [
+        "observation-after-0001"
+      ],
+      "expected_result_checks": [
+        {
+          "condition_id": "expected-value-one",
+          "result": "met",
+          "evidence_refs": [
+            "observation-after-0001"
+          ]
+        }
+      ],
+      "stop_condition_checks": [
+        {
+          "condition_id": "stop-unexpected-change",
+          "result": "clear",
+          "evidence_refs": [
+            "observation-after-0001"
+          ]
+        }
+      ],
+      "unexpected_changes": [],
+      "remaining_issues": [],
+      "decision": "completed",
+      "reason": "The later snapshot shows the expected value and unchanged sentinel, so the analyst declares completion despite the unresolved execution outcome. This completion claim is deliberately invalid under v0.1."
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "closure",
+      "record_id": "closure-0001",
+      "mission_id": "mission-unknown-outcome-completed-0001",
+      "created_at": "2026-09-28T02:00:11Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "disposition": "completed",
+      "basis_refs": [
+        "execution-0001",
+        "verification-0001"
+      ],
+      "verification_ref": "verification-0001",
+      "execution_status": "recorded",
+      "reason": "The controller accepts the completed verification despite execution.outcome=unknown. This deliberately violates the requirement for a succeeded execution receipt before completion.",
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 9
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "fixture": {
+      "synthetic": true,
+      "description": "Deliberately invalid synthetic mission: a dispatched request has an unknown outcome, although a later snapshot shows the desired state. The analyst and controller nevertheless declare completed. The observation does not change the execution receipt into succeeded. No external action has been performed.",
+      "validation_boundary": "The registry below documents fixture assumptions. It is not trusted authorization or proof of runtime enforcement.",
+      "external_reference_registry": {
+        "urn:example:tacp:unknown-outcome-completed:demo-store:configuration": {
+          "kind": "demo_target",
+          "initial": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:unknown-outcome-completed:authorization:operator-grant-v1": {
+          "kind": "authorization_snapshot",
+          "issuer": "example-human-operator",
+          "authorized_executor": "example-executor-01",
+          "allowed_action": {
+            "operation_id": "operation-unknown-outcome-completed-0001",
+            "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+            "operation": "compare_and_set",
+            "parameters": {
+              "expected_revision": "r1",
+              "field": "value",
+              "new_value": 1
+            }
+          },
+          "valid_from": "2026-09-28T01:59:00Z",
+          "valid_until": "2026-09-28T02:05:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:unknown-outcome-completed:policy:demo-v1": {
+          "kind": "immutable_policy_snapshot",
+          "version": "demo-v1",
+          "resource_accounting": "One work unit for each of two observations, assessment, review, execution, verification, and closure; two units for gate admission/checking. Mission creation costs zero. At gate check: four units consumed (pre-observation, assessment, review, and gate admission); five reserved for gate finalization, execution, post-observation, verification, and closure. Final usage: nine units.",
+          "expected_result_evaluator": "Read target.value and compare with integer 1.",
+          "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+        },
+        "urn:example:tacp:unknown-outcome-completed:evidence:conditional-update-contract": {
+          "kind": "runtime_contract",
+          "atomic_revision_check": true,
+          "single_field_update": true,
+          "mismatch_effect": "No mutation"
+        },
+        "urn:example:tacp:unknown-outcome-completed:evidence:store-before": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+          "captured_at": "2026-09-28T02:00:01Z",
+          "state": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:unknown-outcome-completed:evidence:store-after": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+          "captured_at": "2026-09-28T02:00:09Z",
+          "state": {
+            "value": 1,
+            "sentinel": "unchanged",
+            "revision": "r2"
+          }
+        },
+        "urn:example:tacp:unknown-outcome-completed:check:revision-equals-r1": {
+          "kind": "prerequisite_check",
+          "target_ref": "urn:example:tacp:unknown-outcome-completed:demo-store:configuration",
+          "expected_revision": "r1"
+        },
+        "urn:example:tacp:unknown-outcome-completed:runtime:conditional-update-v1": {
+          "kind": "runtime_fixture",
+          "authorization_rechecked_at": "2026-09-28T02:00:06Z",
+          "revision_rechecked_at": "2026-09-28T02:00:06Z",
+          "observed_revision": "r1",
+          "conditional_dispatch": true,
+          "durable_operation_reservation": true,
+          "automatic_delivery_retries": false
+        },
+        "urn:example:tacp:unknown-outcome-completed:reservation:operation-unknown-outcome-completed-0001": {
+          "kind": "operation_reservation",
+          "operation_id": "operation-unknown-outcome-completed-0001",
+          "reserved_at": "2026-09-28T02:00:06Z",
+          "dispatch_count": 1,
+          "status": "consumed"
+        },
+        "urn:example:tacp:unknown-outcome-completed:result:operation-unknown-outcome-completed-0001": {
+          "kind": "transport_timeout_receipt",
+          "operation_id": "operation-unknown-outcome-completed-0001",
+          "finished_at": "2026-09-28T02:00:07Z",
+          "outcome": "unknown",
+          "description": "Tracking of the dispatched request ended with a timeout; this receipt does not establish success or absence of side effects."
+        }
+      },
+      "expected_validation": {
+        "structural": "fail",
+        "semantic": "fail",
+        "primary_error": "unknown_outcome_completed",
+        "execution_record_id": "execution-0001",
+        "verification_record_id": "verification-0001",
+        "closure_record_id": "closure-0001",
+        "execution_outcome": "unknown",
+        "claimed_disposition": "completed",
+        "schema_keyword": "contains",
+        "explanation": "A completed closure requires a succeeded execution record. Later evidence of the desired state does not satisfy this requirement while the recorded execution outcome remains unknown. The nonempty uncertainties field keeps the unknown execution record itself structurally valid; the violation is the completion claim across records.",
+        "required_disposition": "held unless an explicit stop or confirmed stop condition requires stopped",
+        "runtime_enforcement": "not tested; all records are synthetic"
+      }
+    }
+  }
+}
