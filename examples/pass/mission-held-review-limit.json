@@ -1,0 +1,391 @@
+{
+  "protocol_version": "0.1.0",
+  "mission_id": "mission-held-review-limit-0001",
+  "records": [
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "mission",
+      "record_id": "mission-held-review-limit-0001",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:00Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+      "operation_id": "operation-held-review-limit-0001",
+      "observation_scope": [
+        "urn:example:tacp:held-review-limit:demo-store:configuration",
+        "urn:example:tacp:held-review-limit:evidence:conditional-update-contract"
+      ],
+      "authorization_ref": "urn:example:tacp:held-review-limit:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:held-review-limit:policy:demo-v1",
+      "limits": {
+        "max_review_rounds": 2,
+        "deadline_at": "2026-09-28T02:05:00Z",
+        "max_observation_age_seconds": 60,
+        "max_execution_attempts": 1,
+        "resource_budgets": [
+          {
+            "budget_id": "work",
+            "unit": "work_units",
+            "limit": 20
+          }
+        ]
+      },
+      "expected_results": [
+        {
+          "condition_id": "expected-value-one",
+          "description": "The target value equals 1."
+        }
+      ],
+      "stop_conditions": [
+        {
+          "condition_id": "stop-unexpected-change",
+          "description": "A data field other than value changed, excluding the expected revision-token update."
+        }
+      ]
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "observation",
+      "record_id": "observation-before-0001",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:02Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "pre_execution",
+      "observed_at": "2026-09-28T02:00:01Z",
+      "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r1"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:held-review-limit:evidence:store-before",
+          "retrieved_at": "2026-09-28T02:00:01Z"
+        }
+      ],
+      "facts": [
+        "The target snapshot contains value=0, sentinel=unchanged, and revision=r1."
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "assessment",
+      "record_id": "assessment-0001",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:03Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "revision": 1,
+      "observation_refs": [
+        "observation-before-0001"
+      ],
+      "action": {
+        "operation_id": "operation-held-review-limit-0001",
+        "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "rationale": "The snapshot shows value=0 at revision r1. The proposed compare_and_set operation is expected to provide a conditional single-field update; the challenge review must test that assumption before any gate request.",
+      "prerequisites": [
+        {
+          "prerequisite_id": "revision-current",
+          "description": "The target revision remains r1 through dispatch.",
+          "check_ref": "urn:example:tacp:held-review-limit:check:revision-equals-r1"
+        }
+      ],
+      "open_issues": [],
+      "recommendation": "ready"
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "review",
+      "record_id": "review-0001",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:04Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "round": 1,
+      "assessment_ref": "assessment-0001",
+      "questions": [
+        "Does the collected evidence establish that compare_and_set checks the revision atomically and changes only the selected field?"
+      ],
+      "checks_performed": [
+        {
+          "question": "Does the collected evidence establish atomic and single-field behavior?",
+          "method": "Inspect the observation sources and compare them with the assumptions in the proposed action.",
+          "finding": "The snapshot establishes target state but does not establish runtime behavior. Acquire the scoped runtime contract and a fresh target snapshot before proceeding.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ]
+        }
+      ],
+      "reused_observation_refs": [
+        "observation-before-0001"
+      ],
+      "new_observation_refs": [],
+      "issue_updates": [
+        {
+          "issue_id": "issue-runtime-contract-unconfirmed",
+          "status": "open",
+          "explanation": "Atomic revision checking and single-field mutation are unsupported by the currently collected evidence. This blocks execution.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ]
+        }
+      ],
+      "remaining_blocking_issues": [
+        "The runtime contract has not been observed; the action could violate its conditional or single-field assumptions."
+      ],
+      "decision": "reobserve",
+      "decision_change": "initial",
+      "change_reason": "The initial challenge found an unsupported runtime assumption. Readiness is withdrawn and additional scoped observation is required; no gate request or action dispatch is permitted yet."
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "observation",
+      "record_id": "observation-additional-0001",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:06Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "pre_execution",
+      "observed_at": "2026-09-28T02:00:05Z",
+      "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r1"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:held-review-limit:evidence:store-reobserved",
+          "retrieved_at": "2026-09-28T02:00:05Z"
+        },
+        {
+          "source_ref": "urn:example:tacp:held-review-limit:evidence:conditional-update-contract",
+          "retrieved_at": "2026-09-28T02:00:05Z"
+        }
+      ],
+      "facts": [
+        "The refreshed target snapshot still contains value=0, sentinel=unchanged, and revision=r1.",
+        "The acquired runtime documentation describes a revision argument and a selected-field update.",
+        "The documentation does not establish whether revision checking and mutation are atomic."
+      ],
+      "uncertainties": [
+        "Atomic revision checking at dispatch remains unverified."
+      ]
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "assessment",
+      "record_id": "assessment-0002",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:07Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "revision": 2,
+      "observation_refs": [
+        "observation-before-0001",
+        "observation-additional-0001"
+      ],
+      "action": {
+        "operation_id": "operation-held-review-limit-0001",
+        "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "rationale": "The refreshed snapshot confirms the target remains at r1, but the acquired documentation does not establish atomic revision checking. This missing execution prerequisite remains unresolved; recommend holding the action.",
+      "prerequisites": [
+        {
+          "prerequisite_id": "revision-current",
+          "description": "The target revision remains r1 through dispatch.",
+          "check_ref": "urn:example:tacp:held-review-limit:check:revision-equals-r1"
+        }
+      ],
+      "open_issues": [
+        {
+          "issue_id": "issue-runtime-contract-unconfirmed",
+          "description": "Atomic revision checking through dispatch is not established by the available runtime documentation.",
+          "blocks_execution": true
+        }
+      ],
+      "recommendation": "hold",
+      "supersedes_ref": "assessment-0001"
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "review",
+      "record_id": "review-0002",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:08Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "round": 2,
+      "assessment_ref": "assessment-0002",
+      "questions": [
+        "Does the acquired documentation establish atomic revision checking?",
+        "Does the unchanged target snapshot resolve the missing runtime guarantee?"
+      ],
+      "checks_performed": [
+        {
+          "question": "Does the acquired documentation establish atomic revision checking?",
+          "method": "Inspect the additional observation for an explicit atomic check-and-mutate guarantee.",
+          "finding": "The documentation describes a revision argument but leaves atomicity unverified. The execution-blocking issue remains open.",
+          "evidence_refs": [
+            "observation-additional-0001"
+          ]
+        },
+        {
+          "question": "Does the unchanged target snapshot resolve the missing runtime guarantee?",
+          "method": "Compare both snapshots and distinguish observed target stability from a dispatch-time enforcement guarantee.",
+          "finding": "Both snapshots show r1, but this does not establish that the target cannot change between a check and mutation.",
+          "evidence_refs": [
+            "observation-before-0001",
+            "observation-additional-0001"
+          ]
+        }
+      ],
+      "reused_observation_refs": [
+        "observation-before-0001",
+        "observation-additional-0001"
+      ],
+      "new_observation_refs": [],
+      "issue_updates": [
+        {
+          "issue_id": "issue-runtime-contract-unconfirmed",
+          "status": "open",
+          "explanation": "The additional documentation does not establish atomic revision checking. No issue resolution or independent corroboration is claimed.",
+          "evidence_refs": [
+            "observation-additional-0001"
+          ]
+        }
+      ],
+      "remaining_blocking_issues": [
+        "Atomic revision checking through dispatch remains unverified."
+      ],
+      "decision": "hold",
+      "decision_change": "revised",
+      "change_reason": "The previous reobserve decision becomes hold: review round 2 has reached max_review_rounds=2, and the execution-blocking issue remains unresolved. A third review and action dispatch are prohibited in this mission.",
+      "previous_review_ref": "review-0001"
+    },
+    {
+      "protocol_version": "0.1.0",
+      "record_type": "closure",
+      "record_id": "closure-0001",
+      "mission_id": "mission-held-review-limit-0001",
+      "created_at": "2026-09-28T02:00:09Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "disposition": "held",
+      "basis_refs": [
+        "mission-held-review-limit-0001",
+        "assessment-0002",
+        "review-0002"
+      ],
+      "execution_status": "not_dispatched",
+      "reason": "The second and last permitted review still leaves atomic dispatch behavior unverified. The controller closes the mission as held, with no gate request, operation reservation, or execution attempt. Post-execution verification is absent because no action was dispatched.",
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 7
+        }
+      ]
+    }
+  ],
+  "extensions": {
+    "fixture": {
+      "synthetic": true,
+      "description": "Synthetic example of a conforming hold when two permitted challenge reviews fail to resolve a required execution prerequisite. No external action has been performed.",
+      "validation_boundary": "The registry below documents fixture assumptions. It is not trusted authorization or proof of runtime enforcement.",
+      "external_reference_registry": {
+        "urn:example:tacp:held-review-limit:demo-store:configuration": {
+          "kind": "demo_target",
+          "initial": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:held-review-limit:authorization:operator-grant-v1": {
+          "kind": "authorization_snapshot",
+          "issuer": "example-human-operator",
+          "authorized_executor": "example-executor-01",
+          "allowed_action": {
+            "operation_id": "operation-held-review-limit-0001",
+            "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+            "operation": "compare_and_set",
+            "parameters": {
+              "expected_revision": "r1",
+              "field": "value",
+              "new_value": 1
+            }
+          },
+          "valid_from": "2026-09-28T01:59:00Z",
+          "valid_until": "2026-09-28T02:05:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:held-review-limit:policy:demo-v1": {
+          "kind": "immutable_policy_snapshot",
+          "version": "demo-v1",
+          "resource_accounting": "One work unit for each of two observations, two assessments, two reviews, and closure. Mission creation costs zero. Six units are consumed before closure; one control-plane unit is reserved for closure bookkeeping. Final usage is seven units, within the twenty-unit budget.",
+          "expected_result_evaluator": "Read target.value and compare with integer 1.",
+          "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+        },
+        "urn:example:tacp:held-review-limit:evidence:conditional-update-contract": {
+          "kind": "runtime_documentation_excerpt",
+          "acquired_at": "2026-09-28T02:00:05Z",
+          "revision_argument_documented": true,
+          "single_field_update_documented": true,
+          "atomic_revision_check": "not_established",
+          "mismatch_effect": "not_established"
+        },
+        "urn:example:tacp:held-review-limit:evidence:store-before": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+          "captured_at": "2026-09-28T02:00:01Z",
+          "state": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:held-review-limit:check:revision-equals-r1": {
+          "kind": "prerequisite_check",
+          "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+          "expected_revision": "r1"
+        },
+        "urn:example:tacp:held-review-limit:evidence:store-reobserved": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:held-review-limit:demo-store:configuration",
+          "captured_at": "2026-09-28T02:00:05Z",
+          "state": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        }
+      },
+      "review_evidence_classification": "Additional documentation contributes information but does not resolve atomicity. Assessment revision 2 already references the additional observation, so review round 2 correctly classifies it as reused. Repetition and unchanged snapshots do not constitute an atomicity guarantee.",
+      "controller_state_at_closure": {
+        "review_rounds_consumed": 2,
+        "max_review_rounds": 2,
+        "gate_requests": 0,
+        "operation_reservations": 0,
+        "dispatch_attempts": 0,
+        "unresolved_reservations": 0,
+        "execution_not_dispatched_confirmed": true,
+        "reason": "Review-limit exhaustion with an unresolved execution-blocking issue."
+      }
+    }
+  }
+}
