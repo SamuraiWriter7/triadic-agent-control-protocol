@@ -1,0 +1,442 @@
+{
+  "protocol_version": "0.2.0",
+  "mission_id": "mission-v02-missing-dispatch-check-0001",
+  "records": [
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "mission",
+      "record_id": "mission-v02-missing-dispatch-check-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:00Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+      "operation_id": "operation-v02-missing-dispatch-check-0001",
+      "observation_scope": [
+        "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+        "urn:example:tacp:v02-missing-dispatch-check:evidence:conditional-update-contract"
+      ],
+      "authorization_ref": "urn:example:tacp:v02-missing-dispatch-check:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:v02-missing-dispatch-check:policy:demo-v1",
+      "limits": {
+        "max_review_rounds": 2,
+        "deadline_at": "2026-09-29T02:05:00Z",
+        "max_observation_age_seconds": 60,
+        "max_execution_attempts": 1,
+        "resource_budgets": [
+          {
+            "budget_id": "work",
+            "unit": "work_units",
+            "limit": 20
+          }
+        ],
+        "max_dispatch_check_age_seconds": 5
+      },
+      "expected_results": [
+        {
+          "condition_id": "expected-value-one",
+          "description": "The target value equals 1."
+        }
+      ],
+      "stop_conditions": [
+        {
+          "condition_id": "stop-unexpected-change",
+          "description": "A data field other than value changed, excluding the expected revision-token update."
+        }
+      ]
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "observation",
+      "record_id": "observation-before-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:02Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "pre_execution",
+      "observed_at": "2026-09-29T02:00:01Z",
+      "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r1"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:v02-missing-dispatch-check:evidence:store-before",
+          "retrieved_at": "2026-09-29T02:00:01Z"
+        },
+        {
+          "source_ref": "urn:example:tacp:v02-missing-dispatch-check:evidence:conditional-update-contract",
+          "retrieved_at": "2026-09-29T02:00:01Z"
+        }
+      ],
+      "facts": [
+        "The target snapshot contains value=0, sentinel=unchanged, and revision=r1.",
+        "The runtime contract supports an atomic revision comparison and a single-field update.",
+        "A revision mismatch rejects the mutation without changing the target."
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "assessment",
+      "record_id": "assessment-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:03Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "revision": 1,
+      "observation_refs": [
+        "observation-before-0001"
+      ],
+      "action": {
+        "operation_id": "operation-v02-missing-dispatch-check-0001",
+        "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "rationale": "The observed value is 0. A conditional single-field update can set it to 1 while rejecting a changed revision.",
+      "prerequisites": [
+        {
+          "prerequisite_id": "revision-current",
+          "description": "The target revision remains r1 through dispatch.",
+          "check_ref": "urn:example:tacp:v02-missing-dispatch-check:check:revision-equals-r1"
+        }
+      ],
+      "open_issues": [],
+      "recommendation": "ready"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "review",
+      "record_id": "review-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:04Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "round": 1,
+      "assessment_ref": "assessment-0001",
+      "questions": [
+        "Could the target change after observation?",
+        "Could the proposed action modify another data field?"
+      ],
+      "checks_performed": [
+        {
+          "question": "Could the target change after observation?",
+          "method": "Compare the observed revision, action parameters, and runtime contract.",
+          "finding": "The action supplies expected_revision=r1; the runtime rejects a mismatch atomically at dispatch.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ]
+        },
+        {
+          "question": "Could the proposed action modify another data field?",
+          "method": "Inspect the action field selection and the runtime contract.",
+          "finding": "Only value is selected for mutation; outcome verification must compare sentinel against the observed baseline.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ]
+        }
+      ],
+      "reused_observation_refs": [
+        "observation-before-0001"
+      ],
+      "new_observation_refs": [],
+      "issue_updates": [],
+      "remaining_blocking_issues": [],
+      "decision": "pass",
+      "decision_change": "initial",
+      "change_reason": "The initial challenge supports conditional execution. Existing evidence was reexamined; no new independent corroboration is claimed."
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "gate",
+      "record_id": "gate-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:05Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "assessment_ref": "assessment-0001",
+      "review_ref": "review-0001",
+      "action": {
+        "operation_id": "operation-v02-missing-dispatch-check-0001",
+        "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "authorization_ref": "urn:example:tacp:v02-missing-dispatch-check:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:v02-missing-dispatch-check:policy:demo-v1",
+      "checked_at": "2026-09-29T02:00:05Z",
+      "valid_until": "2026-09-29T02:00:30Z",
+      "checks": {
+        "reference_integrity": "pass",
+        "review_passed": "pass",
+        "authorization_valid": "pass",
+        "scope_match": "pass",
+        "observation_fresh": "pass",
+        "target_state_match": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass",
+        "stop_conditions_clear": "pass",
+        "operation_available": "pass"
+      },
+      "prerequisite_results": [
+        {
+          "prerequisite_id": "revision-current",
+          "result": "pass",
+          "evidence_ref": "observation-before-0001"
+        }
+      ],
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 4,
+          "reserved": 6
+        }
+      ],
+      "enforcement_ref": "urn:example:tacp:v02-missing-dispatch-check:runtime:conditional-update-v1",
+      "decision": "allow",
+      "reasons": [
+        "The fixture authorization permits the exact conditional update.",
+        "Revision r1 is current; atomic dispatch will enforce it again.",
+        "The resource reservation covers gate finalization, the mandatory dispatch check, execution, outcome verification, and closure bookkeeping."
+      ]
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "execution",
+      "record_id": "execution-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:08Z",
+      "producer_id": "example-executor-01",
+      "producer_role": "executor",
+      "gate_ref": "gate-0001",
+      "assessment_ref": "assessment-0001",
+      "action": {
+        "operation_id": "operation-v02-missing-dispatch-check-0001",
+        "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "started_at": "2026-09-29T02:00:06Z",
+      "finished_at": "2026-09-29T02:00:07Z",
+      "attempt": 1,
+      "reservation_ref": "urn:example:tacp:v02-missing-dispatch-check:reservation:operation-v02-missing-dispatch-check-0001",
+      "outcome": "succeeded",
+      "reported_effects": [
+        "value changed from 0 to 1; revision advanced from r1 to r2."
+      ],
+      "uncertainties": [],
+      "result_refs": [
+        "urn:example:tacp:v02-missing-dispatch-check:result:operation-v02-missing-dispatch-check-0001"
+      ],
+      "dispatch_check_ref": "dispatch-check-0001"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "observation",
+      "record_id": "observation-after-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:09Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "post_execution",
+      "observed_at": "2026-09-29T02:00:09Z",
+      "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r2"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:v02-missing-dispatch-check:evidence:store-after",
+          "retrieved_at": "2026-09-29T02:00:09Z"
+        }
+      ],
+      "facts": [
+        "The target snapshot contains value=1, sentinel=unchanged, and revision=r2.",
+        "Compared with the pre-execution snapshot, only value and the expected revision token changed."
+      ],
+      "uncertainties": [],
+      "execution_ref": "execution-0001"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "verification",
+      "record_id": "verification-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:10Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "execution_ref": "execution-0001",
+      "observation_refs": [
+        "observation-after-0001"
+      ],
+      "expected_result_checks": [
+        {
+          "condition_id": "expected-value-one",
+          "result": "met",
+          "evidence_refs": [
+            "observation-after-0001"
+          ]
+        }
+      ],
+      "stop_condition_checks": [
+        {
+          "condition_id": "stop-unexpected-change",
+          "result": "clear",
+          "evidence_refs": [
+            "observation-after-0001"
+          ]
+        }
+      ],
+      "unexpected_changes": [],
+      "remaining_issues": [],
+      "decision": "completed",
+      "reason": "Post-execution observation confirms value=1 and unchanged sentinel; the reported success is supported by the observed target state."
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "closure",
+      "record_id": "closure-0001",
+      "mission_id": "mission-v02-missing-dispatch-check-0001",
+      "created_at": "2026-09-29T02:00:11Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "disposition": "completed",
+      "basis_refs": [
+        "execution-0001",
+        "verification-0001"
+      ],
+      "verification_ref": "verification-0001",
+      "execution_status": "recorded",
+      "reason": "The controller claims completion based on a succeeded execution receipt and a matching post-execution snapshot, despite the absent mandatory dispatch-check record. This deliberately invalid claim must be rejected.",
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 9
+        }
+      ],
+      "reason_codes": [
+        "verified_result"
+      ]
+    }
+  ],
+  "extensions": {
+    "fixture": {
+      "synthetic": true,
+      "description": "Deliberately invalid synthetic v0.2 mission: the initial gate allows the action, but no dispatch_check record exists. The execution retains dispatch_check_ref=dispatch-check-0001, which has no matching record, and the controller incorrectly claims completion. A successful effect cannot substitute for the mandatory final check. No external action has been performed.",
+      "validation_boundary": "The registry documents fixture assumptions only. It neither grants permission nor proves runtime enforcement. The v0.2 schema and targeted fixture-consistency checks do not substitute for a complete v0.2 semantic validator.",
+      "external_reference_registry": {
+        "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration": {
+          "kind": "demo_target",
+          "initial": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:authorization:operator-grant-v1": {
+          "kind": "authorization_snapshot",
+          "issuer": "example-human-operator",
+          "authorized_executor": "example-executor-01",
+          "allowed_action": {
+            "operation_id": "operation-v02-missing-dispatch-check-0001",
+            "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+            "operation": "compare_and_set",
+            "parameters": {
+              "expected_revision": "r1",
+              "field": "value",
+              "new_value": 1
+            }
+          },
+          "valid_from": "2026-09-29T01:59:00Z",
+          "valid_until": "2026-09-29T02:05:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:policy:demo-v1": {
+          "kind": "immutable_policy_snapshot",
+          "version": "demo-v1",
+          "resource_accounting": "One work unit for each of two observations, assessment, review, execution, verification, and closure; two units for gate admission/checking. Mission creation costs zero. At the initial gate, four units are used and six reserved, including capacity for the mandatory final dispatch check. That check is deliberately omitted. Gate finalization, execution, post-observation, verification, and closure consume five more units; the unused check unit is released. Final usage is nine units. Available resources and released capacity do not authorize skipping the final check.",
+          "expected_result_evaluator": "Read target.value and compare with integer 1.",
+          "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:evidence:conditional-update-contract": {
+          "kind": "runtime_contract",
+          "atomic_revision_check": true,
+          "single_field_update": true,
+          "mismatch_effect": "No mutation"
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:evidence:store-before": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+          "captured_at": "2026-09-29T02:00:01Z",
+          "state": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:evidence:store-after": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+          "captured_at": "2026-09-29T02:00:09Z",
+          "state": {
+            "value": 1,
+            "sentinel": "unchanged",
+            "revision": "r2"
+          }
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:check:revision-equals-r1": {
+          "kind": "prerequisite_check",
+          "target_ref": "urn:example:tacp:v02-missing-dispatch-check:demo-store:configuration",
+          "expected_revision": "r1"
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:runtime:conditional-update-v1": {
+          "kind": "runtime_fixture",
+          "authorization_rechecked_at": "2026-09-29T02:00:06Z",
+          "revision_rechecked_at": "2026-09-29T02:00:06Z",
+          "observed_revision": "r1",
+          "conditional_dispatch": true,
+          "durable_operation_reservation": true,
+          "automatic_delivery_retries": false,
+          "dispatch_check_record_present": false,
+          "description": "Illustrative runtime claims about dispatch-time enforcement do not replace the missing mandatory protocol record or resolve the execution reference."
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:reservation:operation-v02-missing-dispatch-check-0001": {
+          "kind": "operation_reservation",
+          "operation_id": "operation-v02-missing-dispatch-check-0001",
+          "reserved_at": "2026-09-29T02:00:06Z",
+          "dispatch_count": 1,
+          "status": "consumed"
+        },
+        "urn:example:tacp:v02-missing-dispatch-check:result:operation-v02-missing-dispatch-check-0001": {
+          "kind": "tool_receipt",
+          "operation_id": "operation-v02-missing-dispatch-check-0001",
+          "finished_at": "2026-09-29T02:00:07Z",
+          "outcome": "succeeded",
+          "new_revision": "r2"
+        }
+      },
+      "expected_validation": {
+        "valid": false,
+        "failure_stage": "schema",
+        "primary_violation": "An execution record exists without a preceding allow dispatch_check record.",
+        "related_semantic_violation": "execution.dispatch_check_ref does not resolve to a record in this mission.",
+        "note": "These annotations describe the fixture only and must not determine validator acceptance or rejection."
+      }
+    }
+  }
+}
