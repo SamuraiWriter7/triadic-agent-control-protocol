@@ -1,4 +1,4 @@
-TACP v0.3 — Human-Reviewed Recovery and Mission Handoff
+-Reviewed Recovery and Mission Handoff
 Protocol: Triadic Agent Control Protocol
 Protocol version: 0.3.0
 Status: Draft — specification only; v0.3 schema, fixtures, and validator support are pending.
@@ -240,4 +240,4 @@ schemas/tacp-v0.3.schema.json — version-specific document forms and structural
 Individual fixtures under examples/v0.3/pass/ and examples/v0.3/fail/.
 scripts/validate.py — explicit v0.3 semantic support and diagnostic expectations while retaining v0.1/v0.2 behavior.
 .github/workflows/validate.yml — exercise every supported version and required validation checks.
-This specification does not claim that those later deliverables exist or pass. Existing v0.1/v0.2 results do not establish v0.3 support. Earlier-version fixture coverage gaps remain separate release-review items; adding this draft does not waive them. Human maintainer review and implemented conformance checks are required before a v0.3 release decision. No release tag, repository publication, or real external action is pe
+This specification does not claim that those later deliverables exist or pass. Existing v0.1/v0.2 results do not establish v0.3 support. Earlier-version fixture coverage gaps remain separate release-review items; adding this draft does not waive them. Human maintainer review and implemented conformance checks are required before a v0.3 release decision. No release tag, repository publication, or real external action is performed by this document.
