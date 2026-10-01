@@ -1,0 +1,678 @@
+{
+  "protocol_version": "0.2.0",
+  "mission_id": "mission-v02-reobserved-completed-0001",
+  "records": [
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "mission",
+      "record_id": "mission-v02-reobserved-completed-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:00Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+      "operation_id": "operation-v02-reobserved-completed-0001",
+      "observation_scope": [
+        "urn:example:tacp:v02-reobserved:demo-store:configuration",
+        "urn:example:tacp:v02-reobserved:evidence:conditional-update-contract"
+      ],
+      "authorization_ref": "urn:example:tacp:v02-reobserved:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:v02-reobserved:policy:demo-v1",
+      "limits": {
+        "max_review_rounds": 2,
+        "deadline_at": "2026-09-29T02:05:00Z",
+        "max_observation_age_seconds": 60,
+        "max_execution_attempts": 1,
+        "resource_budgets": [
+          {
+            "budget_id": "work",
+            "unit": "work_units",
+            "limit": 20
+          }
+        ],
+        "max_dispatch_check_age_seconds": 5
+      },
+      "expected_results": [
+        {
+          "condition_id": "expected-value-one",
+          "description": "The target value equals 1."
+        }
+      ],
+      "stop_conditions": [
+        {
+          "condition_id": "stop-unexpected-change",
+          "description": "A data field other than value changed, excluding the expected revision-token update."
+        }
+      ]
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "observation",
+      "record_id": "observation-before-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:02Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "pre_execution",
+      "observed_at": "2026-09-29T02:00:01Z",
+      "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r1"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:v02-reobserved:evidence:store-before",
+          "retrieved_at": "2026-09-29T02:00:01Z"
+        }
+      ],
+      "facts": [
+        "The target snapshot contains value=0, sentinel=unchanged, and revision=r1."
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "assessment",
+      "record_id": "assessment-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:03Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "revision": 1,
+      "observation_refs": [
+        "observation-before-0001"
+      ],
+      "action": {
+        "operation_id": "operation-v02-reobserved-completed-0001",
+        "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "rationale": "The snapshot shows value=0 at revision r1. The proposed compare_and_set operation is expected to provide a conditional single-field update; the challenge review must test that assumption before any gate request.",
+      "prerequisites": [
+        {
+          "prerequisite_id": "revision-current",
+          "description": "The target revision remains r1 through dispatch.",
+          "check_ref": "urn:example:tacp:v02-reobserved:check:revision-equals-r1"
+        }
+      ],
+      "open_issues": [],
+      "recommendation": "ready"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "review",
+      "record_id": "review-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:04Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "round": 1,
+      "assessment_ref": "assessment-0001",
+      "questions": [
+        "Does the collected evidence establish that compare_and_set checks the revision atomically and changes only the selected field?"
+      ],
+      "checks_performed": [
+        {
+          "question": "Does the collected evidence establish atomic and single-field behavior?",
+          "method": "Inspect the observation sources and compare them with the assumptions in the proposed action.",
+          "finding": "The snapshot establishes target state but does not establish runtime behavior. Acquire the scoped runtime contract and a fresh target snapshot before proceeding.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ]
+        }
+      ],
+      "reused_observation_refs": [
+        "observation-before-0001"
+      ],
+      "new_observation_refs": [],
+      "issue_updates": [
+        {
+          "issue_id": "issue-runtime-contract-unconfirmed",
+          "status": "open",
+          "explanation": "Atomic revision checking and single-field mutation are unsupported by the currently collected evidence. This blocks execution.",
+          "evidence_refs": [
+            "observation-before-0001"
+          ],
+          "blocks_execution": true
+        }
+      ],
+      "remaining_blocking_issues": [
+        "The runtime contract has not been observed; the action could violate its conditional or single-field assumptions."
+      ],
+      "decision": "reobserve",
+      "decision_change": "initial",
+      "change_reason": "The initial challenge found an unsupported runtime assumption. Readiness is withdrawn and additional scoped observation is required; no gate request or action dispatch is permitted yet."
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "observation",
+      "record_id": "observation-additional-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:06Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "pre_execution",
+      "observed_at": "2026-09-29T02:00:05Z",
+      "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r1"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:v02-reobserved:evidence:store-reobserved",
+          "retrieved_at": "2026-09-29T02:00:05Z"
+        },
+        {
+          "source_ref": "urn:example:tacp:v02-reobserved:evidence:conditional-update-contract",
+          "retrieved_at": "2026-09-29T02:00:05Z"
+        }
+      ],
+      "facts": [
+        "The refreshed target snapshot still contains value=0, sentinel=unchanged, and revision=r1.",
+        "The acquired runtime contract requires an atomic revision comparison and rejects mismatches without mutation.",
+        "The acquired runtime contract limits mutation to the selected field plus the revision token."
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "assessment",
+      "record_id": "assessment-0002",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:07Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "revision": 2,
+      "observation_refs": [
+        "observation-before-0001",
+        "observation-additional-0001"
+      ],
+      "action": {
+        "operation_id": "operation-v02-reobserved-completed-0001",
+        "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "rationale": "The additional observation supplies the previously missing runtime contract and confirms the target is still at r1. The conditional single-field action is now supported by the recorded evidence. The runtime-contract issue can be resolved, subject to review of this revision.",
+      "prerequisites": [
+        {
+          "prerequisite_id": "revision-current",
+          "description": "The target revision remains r1 through dispatch.",
+          "check_ref": "urn:example:tacp:v02-reobserved:check:revision-equals-r1"
+        }
+      ],
+      "open_issues": [],
+      "recommendation": "ready",
+      "supersedes_ref": "assessment-0001"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "review",
+      "record_id": "review-0002",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:08Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "round": 2,
+      "assessment_ref": "assessment-0002",
+      "questions": [
+        "Does the newly acquired contract resolve the unsupported runtime assumption?",
+        "Did the target change while the missing evidence was being acquired?"
+      ],
+      "checks_performed": [
+        {
+          "question": "Does the acquired contract resolve the unsupported runtime assumption?",
+          "method": "Compare the additional observation of the runtime contract with the unchanged action and revision prerequisite.",
+          "finding": "The contract explicitly requires atomic revision checking and single-field mutation, resolving the missing support for the action. Live enforcement remains the gate responsibility.",
+          "evidence_refs": [
+            "observation-additional-0001"
+          ]
+        },
+        {
+          "question": "Did the target change while evidence was being acquired?",
+          "method": "Compare the initial and refreshed snapshots.",
+          "finding": "Both snapshots show value=0, sentinel=unchanged, and revision=r1. The runtime must still enforce r1 at dispatch.",
+          "evidence_refs": [
+            "observation-before-0001",
+            "observation-additional-0001"
+          ]
+        }
+      ],
+      "reused_observation_refs": [
+        "observation-before-0001",
+        "observation-additional-0001"
+      ],
+      "new_observation_refs": [],
+      "issue_updates": [
+        {
+          "issue_id": "issue-runtime-contract-unconfirmed",
+          "status": "resolved",
+          "explanation": "Assessment revision 2 incorporates the scoped runtime contract and refreshed state; this review confirms that the previously missing support is present.",
+          "evidence_refs": [
+            "observation-additional-0001"
+          ],
+          "blocks_execution": false
+        }
+      ],
+      "remaining_blocking_issues": [],
+      "decision": "pass",
+      "decision_change": "revised",
+      "change_reason": "The previous reobserve decision becomes pass because missing contract evidence was acquired and incorporated in assessment revision 2. The additional observation is classified as reused here because assessment revision 2 already referenced it. No independent corroboration is claimed.",
+      "previous_review_ref": "review-0001"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "gate",
+      "record_id": "gate-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:09Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "assessment_ref": "assessment-0002",
+      "review_ref": "review-0002",
+      "action": {
+        "operation_id": "operation-v02-reobserved-completed-0001",
+        "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "authorization_ref": "urn:example:tacp:v02-reobserved:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:v02-reobserved:policy:demo-v1",
+      "checked_at": "2026-09-29T02:00:09Z",
+      "valid_until": "2026-09-29T02:00:30Z",
+      "checks": {
+        "reference_integrity": "pass",
+        "review_passed": "pass",
+        "authorization_valid": "pass",
+        "scope_match": "pass",
+        "observation_fresh": "pass",
+        "target_state_match": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass",
+        "stop_conditions_clear": "pass",
+        "operation_available": "pass"
+      },
+      "prerequisite_results": [
+        {
+          "prerequisite_id": "revision-current",
+          "result": "pass",
+          "evidence_ref": "observation-additional-0001"
+        }
+      ],
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 7,
+          "reserved": 6
+        }
+      ],
+      "enforcement_ref": "urn:example:tacp:v02-reobserved:runtime:conditional-update-v1",
+      "decision": "allow",
+      "reasons": [
+        "The latest assessment and its second challenge review resolve the previously missing runtime evidence.",
+        "Authorization permits the unchanged exact action, and current revision r1 will be enforced atomically.",
+        "The last permitted review passed. Time and resources remain for the mandatory final dispatch check, one execution attempt, outcome verification, and closure."
+      ]
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "dispatch_check",
+      "record_id": "dispatch-check-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:09.500Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "assessment_ref": "assessment-0002",
+      "review_ref": "review-0002",
+      "action": {
+        "operation_id": "operation-v02-reobserved-completed-0001",
+        "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "authorization_ref": "urn:example:tacp:v02-reobserved:authorization:operator-grant-v1",
+      "policy_ref": "urn:example:tacp:v02-reobserved:policy:demo-v1",
+      "checks": {
+        "reference_integrity": "pass",
+        "review_passed": "pass",
+        "authorization_valid": "pass",
+        "scope_match": "pass",
+        "observation_fresh": "pass",
+        "target_state_match": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass",
+        "stop_conditions_clear": "pass",
+        "operation_available": "pass"
+      },
+      "gate_ref": "gate-0001",
+      "checked_at": "2026-09-29T02:00:09.250Z",
+      "dispatch_before": "2026-09-29T02:00:14Z",
+      "authorization_check": {
+        "status": "active",
+        "scope_match": "pass",
+        "evidence_refs": [
+          "urn:example:tacp:v02-reobserved:evidence:authorization-at-dispatch-check"
+        ],
+        "valid_from": "2026-09-29T01:59:00Z",
+        "valid_until": "2026-09-29T02:05:00Z"
+      },
+      "target_check": {
+        "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+        "basis_observation_ref": "observation-additional-0001",
+        "expected_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "current_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "result": "match",
+        "evidence_refs": [
+          "urn:example:tacp:v02-reobserved:evidence:target-at-dispatch-check"
+        ]
+      },
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 9,
+          "reserved": 4
+        }
+      ],
+      "decision": "allow",
+      "reasons": [
+        "The final authorization check reports an active, unrevoked grant covering the exact action and executor.",
+        "The target is still at reviewed revision r1; the runtime will enforce revision equality atomically at dispatch.",
+        "All observations remain fresh, no stop condition is present, and time and resources remain for one attempt and verification.",
+        "Dispatch must begin before 02:00:14Z, with no more than five seconds elapsed since this check."
+      ]
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "execution",
+      "record_id": "execution-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:12Z",
+      "producer_id": "example-executor-01",
+      "producer_role": "executor",
+      "gate_ref": "gate-0001",
+      "assessment_ref": "assessment-0002",
+      "action": {
+        "operation_id": "operation-v02-reobserved-completed-0001",
+        "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+        "operation": "compare_and_set",
+        "parameters": {
+          "expected_revision": "r1",
+          "field": "value",
+          "new_value": 1
+        }
+      },
+      "started_at": "2026-09-29T02:00:10Z",
+      "finished_at": "2026-09-29T02:00:11Z",
+      "attempt": 1,
+      "reservation_ref": "urn:example:tacp:v02-reobserved:reservation:operation-v02-reobserved-completed-0001",
+      "outcome": "succeeded",
+      "reported_effects": [
+        "value changed from 0 to 1; revision advanced from r1 to r2."
+      ],
+      "uncertainties": [],
+      "result_refs": [
+        "urn:example:tacp:v02-reobserved:result:operation-v02-reobserved-completed-0001"
+      ],
+      "dispatch_check_ref": "dispatch-check-0001"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "observation",
+      "record_id": "observation-after-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:13Z",
+      "producer_id": "example-scout-01",
+      "producer_role": "scout",
+      "phase": "post_execution",
+      "observed_at": "2026-09-29T02:00:13Z",
+      "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+      "target_state": {
+        "kind": "revision",
+        "value": "r2"
+      },
+      "sources": [
+        {
+          "source_ref": "urn:example:tacp:v02-reobserved:evidence:store-after",
+          "retrieved_at": "2026-09-29T02:00:13Z"
+        }
+      ],
+      "facts": [
+        "The target snapshot contains value=1, sentinel=unchanged, and revision=r2.",
+        "Compared with the pre-execution snapshot, only value and the expected revision token changed."
+      ],
+      "uncertainties": [],
+      "execution_ref": "execution-0001"
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "verification",
+      "record_id": "verification-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:14Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+      "execution_ref": "execution-0001",
+      "observation_refs": [
+        "observation-after-0001"
+      ],
+      "expected_result_checks": [
+        {
+          "condition_id": "expected-value-one",
+          "result": "met",
+          "evidence_refs": [
+            "observation-after-0001"
+          ]
+        }
+      ],
+      "stop_condition_checks": [
+        {
+          "condition_id": "stop-unexpected-change",
+          "result": "clear",
+          "evidence_refs": [
+            "observation-after-0001"
+          ]
+        }
+      ],
+      "unexpected_changes": [],
+      "remaining_issues": [],
+      "decision": "completed",
+      "reason": "Post-execution observation confirms value=1 and unchanged sentinel; the reported success is supported by the observed target state."
+    },
+    {
+      "protocol_version": "0.2.0",
+      "record_type": "closure",
+      "record_id": "closure-0001",
+      "mission_id": "mission-v02-reobserved-completed-0001",
+      "created_at": "2026-09-29T02:00:15Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "disposition": "completed",
+      "basis_refs": [
+        "execution-0001",
+        "verification-0001"
+      ],
+      "verification_ref": "verification-0001",
+      "execution_status": "recorded",
+      "reason": "Additional observation supported assessment revision 2 and explicit resolution of the blocker in review round 2. The initial gate and final dispatch check allowed the unchanged action; one execution and post-execution observation established verified completion within all limits.",
+      "resource_usage": [
+        {
+          "budget_id": "work",
+          "used": 13
+        }
+      ],
+      "reason_codes": [
+        "verified_result"
+      ]
+    }
+  ],
+  "extensions": {
+    "fixture": {
+      "synthetic": true,
+      "description": "Synthetic conforming v0.2 mission: review round 1 identifies missing runtime evidence and blocks execution. Additional scoped observation supports assessment revision 2; review round 2 explicitly resolves the same issue ID with evidence and passes. Gate admission and a bound final dispatch check precede exactly one execution and verified completion. No external action has been performed.",
+      "validation_boundary": "The registry documents fixture assumptions only. It neither grants permission nor proves runtime enforcement. Structural and semantic validation check record consistency, not the truth or trustworthiness of external evidence.",
+      "external_reference_registry": {
+        "urn:example:tacp:v02-reobserved:demo-store:configuration": {
+          "kind": "demo_target",
+          "initial": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:v02-reobserved:authorization:operator-grant-v1": {
+          "kind": "authorization_snapshot",
+          "issuer": "example-human-operator",
+          "authorized_executor": "example-executor-01",
+          "allowed_action": {
+            "operation_id": "operation-v02-reobserved-completed-0001",
+            "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+            "operation": "compare_and_set",
+            "parameters": {
+              "expected_revision": "r1",
+              "field": "value",
+              "new_value": 1
+            }
+          },
+          "valid_from": "2026-09-29T01:59:00Z",
+          "valid_until": "2026-09-29T02:05:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v02-reobserved:policy:demo-v1": {
+          "kind": "immutable_policy_snapshot",
+          "version": "demo-v1",
+          "resource_accounting": "One work unit for each of three observations, two assessments, two reviews, the final dispatch check, execution, verification, and closure; two units for gate admission/checking. Mission creation costs zero. At gate admission, seven units are used and six reserved. Gate finalization and the final dispatch check raise usage to nine, leaving four reserved for execution, post-observation, verification, and closure. Final usage is thirteen units within the twenty-unit budget.",
+          "expected_result_evaluator": "Read target.value and compare with integer 1.",
+          "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+        },
+        "urn:example:tacp:v02-reobserved:evidence:conditional-update-contract": {
+          "kind": "runtime_contract",
+          "atomic_revision_check": true,
+          "single_field_update": true,
+          "mismatch_effect": "No mutation",
+          "acquired_at": "2026-09-29T02:00:05Z"
+        },
+        "urn:example:tacp:v02-reobserved:evidence:store-before": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+          "captured_at": "2026-09-29T02:00:01Z",
+          "state": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:v02-reobserved:evidence:store-after": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+          "captured_at": "2026-09-29T02:00:13Z",
+          "state": {
+            "value": 1,
+            "sentinel": "unchanged",
+            "revision": "r2"
+          }
+        },
+        "urn:example:tacp:v02-reobserved:check:revision-equals-r1": {
+          "kind": "prerequisite_check",
+          "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+          "expected_revision": "r1"
+        },
+        "urn:example:tacp:v02-reobserved:runtime:conditional-update-v1": {
+          "kind": "runtime_fixture",
+          "authorization_rechecked_at": "2026-09-29T02:00:10Z",
+          "revision_rechecked_at": "2026-09-29T02:00:10Z",
+          "observed_revision": "r1",
+          "conditional_dispatch": true,
+          "durable_operation_reservation": true,
+          "automatic_delivery_retries": false,
+          "dispatch_check_ref": "dispatch-check-0001"
+        },
+        "urn:example:tacp:v02-reobserved:reservation:operation-v02-reobserved-completed-0001": {
+          "kind": "operation_reservation",
+          "operation_id": "operation-v02-reobserved-completed-0001",
+          "reserved_at": "2026-09-29T02:00:10Z",
+          "dispatch_count": 1,
+          "status": "consumed"
+        },
+        "urn:example:tacp:v02-reobserved:result:operation-v02-reobserved-completed-0001": {
+          "kind": "tool_receipt",
+          "operation_id": "operation-v02-reobserved-completed-0001",
+          "finished_at": "2026-09-29T02:00:11Z",
+          "outcome": "succeeded",
+          "new_revision": "r2"
+        },
+        "urn:example:tacp:v02-reobserved:evidence:store-reobserved": {
+          "kind": "snapshot",
+          "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+          "captured_at": "2026-09-29T02:00:05Z",
+          "state": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        },
+        "urn:example:tacp:v02-reobserved:evidence:authorization-at-dispatch-check": {
+          "kind": "authorization_check_evidence",
+          "checked_at": "2026-09-29T02:00:09.250Z",
+          "authorization_ref": "urn:example:tacp:v02-reobserved:authorization:operator-grant-v1",
+          "issuer": "example-authorization-service",
+          "status": "active",
+          "revoked": false,
+          "scope_match": "pass",
+          "executor_id": "example-executor-01",
+          "checked_action": {
+            "operation_id": "operation-v02-reobserved-completed-0001",
+            "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+            "operation": "compare_and_set",
+            "parameters": {
+              "expected_revision": "r1",
+              "field": "value",
+              "new_value": 1
+            }
+          },
+          "valid_from": "2026-09-29T01:59:00Z",
+          "valid_until": "2026-09-29T02:05:00Z"
+        },
+        "urn:example:tacp:v02-reobserved:evidence:target-at-dispatch-check": {
+          "kind": "target_state_check_evidence",
+          "checked_at": "2026-09-29T02:00:09.250Z",
+          "target_ref": "urn:example:tacp:v02-reobserved:demo-store:configuration",
+          "state": {
+            "kind": "revision",
+            "value": "r1"
+          },
+          "data": {
+            "value": 0,
+            "sentinel": "unchanged",
+            "revision": "r1"
+          }
+        }
+      },
+      "review_evidence_classification": "The additional observation supplies new information to the mission, but assessment revision 2 references it before review round 2. Therefore review round 2 lists it under reused_observation_refs, with new_observation_refs empty, as required by the specification."
+    }
+  }
+}
