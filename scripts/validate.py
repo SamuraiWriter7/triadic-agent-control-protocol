@@ -73,6 +73,12 @@ KNOWN_FAILURES = {
 }
 
 KNOWN_FAILURES_V02 = {
+    "action-mismatch.json": "action_mismatch",
+    "authorization-active-outside-validity.json": "authorization_time",
+    "authorization-unknown-but-executed.json": "execution_dispatch_denied",
+    "duplicate-dispatch-check.json": "duplicate_dispatch_check",
+    "duplicate-execution.json": "duplicate_execution",
+    "false-target-state-match.json": "target_state_result_mismatch",
     "missing-dispatch-check.json": "missing_dispatch_check",
     "expired-dispatch-check.json": "expired_dispatch_check",
     "authorization-expired-at-dispatch.json": "authorization_expired_at_dispatch",
@@ -918,4 +924,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
