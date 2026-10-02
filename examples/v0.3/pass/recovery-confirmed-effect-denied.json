@@ -1,0 +1,1018 @@
+{
+  "protocol_version": "0.3.0",
+  "document_type": "recovery_bundle",
+  "recovery_id": "recovery-confirmed-effect-0001",
+  "source": {
+    "protocol_version": "0.3.0",
+    "document_type": "mission_bundle",
+    "mission_id": "mission-v03-source-0001",
+    "records": [
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "mission",
+        "record_id": "mission-v03-source-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:00Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+        "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+        "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+        "observation_scope": [
+          "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+          "urn:example:tacp:v03:recovery-confirmed-effect:evidence:conditional-update-contract"
+        ],
+        "authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:policy:demo-v1",
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-09-29T02:05:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+        "expected_results": [
+          {
+            "condition_id": "expected-value-one",
+            "description": "The target value equals 1."
+          }
+        ],
+        "stop_conditions": [
+          {
+            "condition_id": "stop-unexpected-change",
+            "description": "A data field other than value changed, excluding the expected revision-token update."
+          }
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "observation",
+        "record_id": "source-observation-before-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:02Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+        "phase": "pre_execution",
+        "observed_at": "2026-09-29T02:00:01Z",
+        "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+        "target_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "sources": [
+          {
+            "source_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:store-before",
+            "retrieved_at": "2026-09-29T02:00:01Z"
+          },
+          {
+            "source_ref": "urn:example:tacp:v03:recovery-confirmed-effect:evidence:conditional-update-contract",
+            "retrieved_at": "2026-09-29T02:00:01Z"
+          }
+        ],
+        "facts": [
+          "The target snapshot contains value=0, sentinel=unchanged, and revision=r1.",
+          "The runtime contract supports an atomic revision comparison and a single-field update.",
+          "A revision mismatch rejects the mutation without changing the target."
+        ],
+        "uncertainties": []
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "assessment",
+        "record_id": "source-assessment-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:03Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "revision": 1,
+        "observation_refs": [
+          "source-observation-before-0001"
+        ],
+        "action": {
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "rationale": "The observed value is 0. A conditional single-field update can set it to 1 while rejecting a changed revision.",
+        "prerequisites": [
+          {
+            "prerequisite_id": "revision-current",
+            "description": "The target revision remains r1 through dispatch.",
+            "check_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:check:revision-equals-r1"
+          }
+        ],
+        "open_issues": [],
+        "recommendation": "ready"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "review",
+        "record_id": "source-review-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:04Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "round": 1,
+        "assessment_ref": "source-assessment-0001",
+        "questions": [
+          "Could the target change after observation?",
+          "Could the proposed action modify another data field?"
+        ],
+        "checks_performed": [
+          {
+            "question": "Could the target change after observation?",
+            "method": "Compare the observed revision, action parameters, and runtime contract.",
+            "finding": "The action supplies expected_revision=r1; the runtime rejects a mismatch atomically at dispatch.",
+            "evidence_refs": [
+              "source-observation-before-0001"
+            ]
+          },
+          {
+            "question": "Could the proposed action modify another data field?",
+            "method": "Inspect the action field selection and the runtime contract.",
+            "finding": "Only value is selected for mutation; outcome verification must compare sentinel against the observed baseline.",
+            "evidence_refs": [
+              "source-observation-before-0001"
+            ]
+          }
+        ],
+        "reused_observation_refs": [
+          "source-observation-before-0001"
+        ],
+        "new_observation_refs": [],
+        "issue_updates": [],
+        "remaining_blocking_issues": [],
+        "decision": "pass",
+        "decision_change": "initial",
+        "change_reason": "The initial challenge supports conditional execution. Existing evidence was reexamined; no new independent corroboration is claimed."
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "gate",
+        "record_id": "source-gate-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:05Z",
+        "producer_id": "example-gate-01",
+        "producer_role": "gate",
+        "assessment_ref": "source-assessment-0001",
+        "review_ref": "source-review-0001",
+        "action": {
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:policy:demo-v1",
+        "checked_at": "2026-09-29T02:00:05Z",
+        "valid_until": "2026-09-29T02:00:30Z",
+        "checks": {
+          "reference_integrity": "pass",
+          "review_passed": "pass",
+          "authorization_valid": "pass",
+          "scope_match": "pass",
+          "observation_fresh": "pass",
+          "target_state_match": "pass",
+          "budgets_available": "pass",
+          "deadline_valid": "pass",
+          "stop_conditions_clear": "pass",
+          "operation_available": "pass"
+        },
+        "prerequisite_results": [
+          {
+            "prerequisite_id": "revision-current",
+            "result": "pass",
+            "evidence_ref": "source-observation-before-0001"
+          }
+        ],
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 4,
+            "reserved": 6
+          }
+        ],
+        "enforcement_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:runtime:conditional-update-v1",
+        "decision": "allow",
+        "reasons": [
+          "The fixture authorization permits the exact conditional update.",
+          "Revision r1 is current; atomic dispatch will enforce it again.",
+          "The resource reservation covers gate finalization, the mandatory dispatch check, execution, outcome verification, and closure bookkeeping."
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "dispatch_check",
+        "record_id": "source-dispatch-check-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:05.500Z",
+        "producer_id": "example-gate-01",
+        "producer_role": "gate",
+        "assessment_ref": "source-assessment-0001",
+        "review_ref": "source-review-0001",
+        "action": {
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:policy:demo-v1",
+        "checks": {
+          "reference_integrity": "pass",
+          "review_passed": "pass",
+          "authorization_valid": "pass",
+          "scope_match": "pass",
+          "observation_fresh": "pass",
+          "target_state_match": "pass",
+          "budgets_available": "pass",
+          "deadline_valid": "pass",
+          "stop_conditions_clear": "pass",
+          "operation_available": "pass"
+        },
+        "gate_ref": "source-gate-0001",
+        "checked_at": "2026-09-29T02:00:05.250Z",
+        "dispatch_before": "2026-09-29T02:00:10Z",
+        "authorization_check": {
+          "status": "active",
+          "scope_match": "pass",
+          "evidence_refs": [
+            "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:authorization-at-dispatch-check"
+          ],
+          "valid_from": "2026-09-29T01:59:00Z",
+          "valid_until": "2026-09-29T02:05:00Z"
+        },
+        "target_check": {
+          "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+          "basis_observation_ref": "source-observation-before-0001",
+          "expected_state": {
+            "kind": "revision",
+            "value": "r1"
+          },
+          "current_state": {
+            "kind": "revision",
+            "value": "r1"
+          },
+          "result": "match",
+          "evidence_refs": [
+            "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:target-at-dispatch-check"
+          ]
+        },
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 6,
+            "reserved": 4
+          }
+        ],
+        "decision": "allow",
+        "reasons": [
+          "The final authorization check reports an active, unrevoked grant covering the exact action and executor.",
+          "The target is still at reviewed revision r1; the runtime will enforce revision equality atomically at dispatch.",
+          "All observations remain fresh, no stop condition is present, and time and resources remain for one attempt and verification.",
+          "Dispatch must begin before 02:00:10Z, with no more than five seconds elapsed since this check."
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "execution",
+        "record_id": "source-execution-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:08Z",
+        "producer_id": "example-executor-01",
+        "producer_role": "executor",
+        "gate_ref": "source-gate-0001",
+        "assessment_ref": "source-assessment-0001",
+        "action": {
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "started_at": "2026-09-29T02:00:06Z",
+        "finished_at": "2026-09-29T02:00:07Z",
+        "attempt": 1,
+        "reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001",
+        "outcome": "unknown",
+        "reported_effects": [],
+        "uncertainties": [
+          "The request was dispatched once, but no authoritative success or failure response was received before outcome tracking ended.",
+          "The operation may have applied or may still produce later effects. Do not retry or release the logical operation reservation."
+        ],
+        "result_refs": [
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:result:attempt-0001"
+        ],
+        "dispatch_check_ref": "source-dispatch-check-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "observation",
+        "record_id": "source-observation-after-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:09Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+        "phase": "post_execution",
+        "observed_at": "2026-09-29T02:00:09Z",
+        "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+        "target_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "sources": [
+          {
+            "source_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:store-after",
+            "retrieved_at": "2026-09-29T02:00:09Z"
+          }
+        ],
+        "facts": [
+          "The target snapshot contains value=0, sentinel=unchanged, and revision=r1.",
+          "An unchanged snapshot does not prove termination or exclude transient or later effects of the dispatched operation."
+        ],
+        "uncertainties": [
+          "The unchanged snapshot does not resolve the missing outcome or exclude transient effects.",
+          "The snapshot does not prove termination or prevent later effects."
+        ],
+        "execution_ref": "source-execution-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "verification",
+        "record_id": "source-verification-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:10Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "execution_ref": "source-execution-0001",
+        "observation_refs": [
+          "source-observation-after-0001"
+        ],
+        "expected_result_checks": [
+          {
+            "condition_id": "expected-value-one",
+            "result": "not_met",
+            "evidence_refs": [
+              "source-observation-after-0001"
+            ]
+          }
+        ],
+        "stop_condition_checks": [
+          {
+            "condition_id": "stop-unexpected-change",
+            "result": "clear",
+            "evidence_refs": [
+              "source-observation-after-0001"
+            ]
+          }
+        ],
+        "unexpected_changes": [],
+        "remaining_issues": [
+          {
+            "description": "The execution outcome remains unknown. The unchanged target snapshot cannot prove absence of effects or termination; the logical operation reservation remains unresolved.",
+            "blocks_completion": true
+          }
+        ],
+        "decision": "held",
+        "reason": "The observed value is still 0, so the expected result is not met. The snapshot alone does not establish finality or absence of effects. Preserve the unknown receipt, retain the reservation, and hold completion without retry."
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "closure",
+        "record_id": "source-closure-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:11Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+        "disposition": "held",
+        "basis_refs": [
+          "source-execution-0001",
+          "source-verification-0001"
+        ],
+        "verification_ref": "source-verification-0001",
+        "execution_status": "uncertain",
+        "reason": "One dispatch has an unknown outcome. The later snapshot remains unchanged and cannot establish termination or absence of effects. Retain the unresolved operation reservation, prohibit automatic retry, and close as held. Any later reconciliation must be recorded separately.",
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 10
+          }
+        ],
+        "reason_codes": [
+          "execution_outcome_unknown",
+          "reservation_unresolved"
+        ],
+        "reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001"
+      }
+    ],
+    "extensions": {
+      "fixture": {
+        "synthetic": true,
+        "description": "Synthetic v0.3 source closed held with one unknown-outcome dispatch, an unchanged target snapshot, and an unresolved retained reservation. These source records remain immutable during subsequent recovery.",
+        "validation_boundary": "Fixture assumptions only; no external action or authoritative evidence verification has occurred.",
+        "external_reference_registry": {
+          "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration": {
+            "kind": "demo_target",
+            "initial": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:authorization:operator-grant-v1": {
+            "kind": "authorization_snapshot",
+            "issuer": "example-human-operator",
+            "authorized_executor": "example-executor-01",
+            "allowed_action": {
+              "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+              "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+              "operation": "compare_and_set",
+              "parameters": {
+                "expected_revision": "r1",
+                "field": "value",
+                "new_value": 1
+              }
+            },
+            "valid_from": "2026-09-29T01:59:00Z",
+            "valid_until": "2026-09-29T02:05:00Z",
+            "revoked": false
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:policy:demo-v1": {
+            "kind": "immutable_policy_snapshot",
+            "version": "demo-v1",
+            "resource_accounting": "One work unit for each of two observations, assessment, review, dispatch check, execution outcome tracking, verification, and closure; two units for gate admission/checking. Mission creation costs zero. At the initial gate, four units are used and six reserved. Gate finalization and the dispatch check raise usage to six used and four reserved. One dispatch/tracking attempt, post-observation, held verification, and closure consume the remaining four units, for ten measured work units. This budget measures controller workflow work, not unknown external effects. The durable logical operation reservation remains retained independently of consumed work-unit reservations.",
+            "expected_result_evaluator": "Read target.value and compare with integer 1.",
+            "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:evidence:conditional-update-contract": {
+            "kind": "runtime_contract",
+            "atomic_revision_check": true,
+            "single_field_update": true,
+            "mismatch_effect": "No mutation"
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:store-before": {
+            "kind": "snapshot",
+            "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+            "captured_at": "2026-09-29T02:00:01Z",
+            "state": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:store-after": {
+            "kind": "snapshot",
+            "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+            "captured_at": "2026-09-29T02:00:09Z",
+            "state": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:check:revision-equals-r1": {
+            "kind": "prerequisite_check",
+            "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+            "expected_revision": "r1"
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:runtime:conditional-update-v1": {
+            "kind": "runtime_fixture",
+            "authorization_rechecked_at": "2026-09-29T02:00:06Z",
+            "revision_rechecked_at": "2026-09-29T02:00:06Z",
+            "observed_revision": "r1",
+            "conditional_dispatch": true,
+            "durable_operation_reservation": true,
+            "automatic_delivery_retries": false,
+            "dispatch_check_ref": "source-dispatch-check-0001"
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001": {
+            "kind": "operation_reservation",
+            "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+            "reserved_at": "2026-09-29T02:00:06Z",
+            "dispatch_count": 1,
+            "status": "unresolved",
+            "retained_at": "2026-09-29T02:00:11Z",
+            "retry_permitted": false,
+            "description": "One dispatch was recorded. The unresolved logical operation reservation remains retained after closure to prevent duplicate dispatch; budget accounting does not release this reservation.",
+            "mission_id": "mission-v03-source-0001"
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:result:attempt-0001": {
+            "kind": "executor_tracking_receipt",
+            "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+            "finished_at": "2026-09-29T02:00:07Z",
+            "outcome": "unknown",
+            "dispatch_count": 1,
+            "authoritative_outcome_received": false,
+            "tracking_ended_at": "2026-09-29T02:00:07Z",
+            "description": "The executor stopped waiting for an authoritative outcome at finished_at. This timestamp marks the end of outcome tracking, not confirmed completion or cancellation of the external operation."
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:authorization-at-dispatch-check": {
+            "kind": "authorization_check_evidence",
+            "checked_at": "2026-09-29T02:00:05.250Z",
+            "authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:authorization:operator-grant-v1",
+            "issuer": "example-authorization-service",
+            "status": "active",
+            "revoked": false,
+            "scope_match": "pass",
+            "executor_id": "example-executor-01",
+            "checked_action": {
+              "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+              "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+              "operation": "compare_and_set",
+              "parameters": {
+                "expected_revision": "r1",
+                "field": "value",
+                "new_value": 1
+              }
+            },
+            "valid_from": "2026-09-29T01:59:00Z",
+            "valid_until": "2026-09-29T02:05:00Z"
+          },
+          "urn:example:tacp:v03:recovery-confirmed-effect:source:evidence:target-at-dispatch-check": {
+            "kind": "target_state_check_evidence",
+            "checked_at": "2026-09-29T02:00:05.250Z",
+            "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+            "state": {
+              "kind": "revision",
+              "value": "r1"
+            },
+            "data": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          }
+        },
+        "controller_state_at_closure": {
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "dispatch_attempts": 1,
+          "operation_reservations": 1,
+          "unresolved_reservations": 1,
+          "retained_reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001",
+          "automatic_retry_permitted": false,
+          "execution_not_dispatched_confirmed": false,
+          "external_operation_termination_confirmed": false,
+          "reason": "Outcome and finality remain unknown at closure. An unchanged snapshot cannot authorize reservation release or retry."
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "handoff",
+      "record_id": "handoff-0001",
+      "recovery_id": "recovery-confirmed-effect-0001",
+      "created_at": "2026-09-29T02:00:12Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "source_mission_ref": "mission-v03-source-0001",
+      "source_closure_ref": "source-closure-0001",
+      "source_operation_id": "operation-v03-recovery-confirmed-effect-0001",
+      "source_reason_codes": [
+        "execution_outcome_unknown",
+        "reservation_unresolved"
+      ],
+      "issue_carryover": [],
+      "candidate": {
+        "mission_id": "mission-v03-successor-0001",
+        "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+        "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+        "observation_scope": [
+          "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+          "urn:example:tacp:v03:recovery-confirmed-effect:evidence:conditional-update-contract"
+        ],
+        "authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:successor:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:recovery-confirmed-effect:successor:policy:demo-v1",
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-09-29T02:05:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+        "expected_results": [
+          {
+            "condition_id": "expected-value-one",
+            "description": "The target value equals 1."
+          }
+        ],
+        "stop_conditions": [
+          {
+            "condition_id": "stop-unexpected-change",
+            "description": "A data field other than value changed, excluding the expected revision-token update."
+          }
+        ]
+      },
+      "recovery_policy_ref": "urn:example:tacp:v03:recovery-confirmed-effect:policy:recovery-v1",
+      "read_authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:authorization:recovery-read-v1",
+      "control_authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:authorization:fence-control-v1",
+      "limits": {
+        "deadline_at": "2026-09-29T02:02:00Z",
+        "max_evidence_age_seconds": 120,
+        "resource_budgets": [
+          {
+            "budget_id": "recovery-work",
+            "unit": "work_units",
+            "limit": 10
+          }
+        ]
+      },
+      "reason": "The source is held after one unknown-outcome dispatch and retains an unresolved reservation at closure. Examine later authoritative evidence under independent recovery authority before considering this exact candidate. Any confirmed source effect makes this recovery ineligible; preserve the original source records.",
+      "source_execution_ref": "source-execution-0001",
+      "source_reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001"
+    },
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "reconciliation",
+      "record_id": "reconciliation-0001",
+      "recovery_id": "recovery-confirmed-effect-0001",
+      "created_at": "2026-09-29T02:00:21Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "handoff_ref": "handoff-0001",
+      "checked_at": "2026-09-29T02:00:20Z",
+      "status": "confirmed_effect",
+      "execution_finality": "terminal",
+      "reservation_status": "consumed",
+      "fence_status": "enforced",
+      "evidence": [
+        {
+          "evidence_ref": "urn:example:tacp:v03:recovery-confirmed-effect:evidence:operation_receipt",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "kind": "operation_receipt"
+        },
+        {
+          "evidence_ref": "urn:example:tacp:v03:recovery-confirmed-effect:evidence:effect_audit",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "kind": "effect_audit"
+        },
+        {
+          "evidence_ref": "urn:example:tacp:v03:recovery-confirmed-effect:evidence:reservation_ledger",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "kind": "reservation_ledger"
+        },
+        {
+          "evidence_ref": "urn:example:tacp:v03:recovery-confirmed-effect:evidence:fence_receipt",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "kind": "fence_receipt"
+        }
+      ],
+      "resource_usage": [
+        {
+          "budget_id": "recovery-work",
+          "used": 5,
+          "reserved": 2
+        }
+      ],
+      "reason": "A later authoritative receipt and operation-correlated effect audit confirm that the source action committed value=1 at 02:00:16Z and terminated at 02:00:17Z. This happened after the source snapshot and held closure. The reservation is consumed, and a permanent source fence prevents replay. A confirmed effect prohibits a successor in v0.3 even with known finality and fencing. The original source receipt remains unknown and its closure remains held."
+    },
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "human_review",
+      "record_id": "human_review-0001",
+      "recovery_id": "recovery-confirmed-effect-0001",
+      "created_at": "2026-09-29T02:00:41Z",
+      "producer_id": "example-human-operator",
+      "producer_role": "human",
+      "handoff_ref": "handoff-0001",
+      "reconciliation_ref": "reconciliation-0001",
+      "reviewer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:identity:human-operator",
+      "reviewer_authority_ref": "urn:example:tacp:v03:recovery-confirmed-effect:authority:human-recovery-review-v1",
+      "decision": "reject",
+      "reviewed_at": "2026-09-29T02:00:40Z",
+      "valid_until": "2026-09-29T02:01:30Z",
+      "evidence_refs": [
+        "urn:example:tacp:v03:recovery-confirmed-effect:receipt:human-review-0001"
+      ],
+      "reason": "Reject this recovery proposal. The later receipt and effect audit attribute a committed external effect to the source operation; v0.3 does not permit a successor after confirmed effect. Terminal execution and fencing do not undo that effect. Preserve the held source and unknown receipt, keep the consumed reservation non-reusable, and do not create another mission for this recovery."
+    },
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "recovery_admission",
+      "record_id": "recovery_admission-0001",
+      "recovery_id": "recovery-confirmed-effect-0001",
+      "created_at": "2026-09-29T02:00:51Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "handoff_ref": "handoff-0001",
+      "reconciliation_ref": "reconciliation-0001",
+      "human_review_ref": "human_review-0001",
+      "checked_at": "2026-09-29T02:00:50Z",
+      "decision": "deny",
+      "checks": {
+        "reference_integrity": "pass",
+        "source_terminal": "pass",
+        "reconciliation_eligible": "fail",
+        "evidence_fresh": "pass",
+        "human_approval_valid": "fail",
+        "recovery_policy_valid": "pass",
+        "read_authorization_valid": "pass",
+        "old_operation_fenced": "pass",
+        "reservation_resolved": "fail",
+        "successor_unique": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass"
+      },
+      "resource_usage": [
+        {
+          "budget_id": "recovery-work",
+          "used": 7,
+          "reserved": 0
+        }
+      ],
+      "reason_codes": [
+        "reconciliation_ineligible",
+        "human_approval_invalid",
+        "reservation_unresolved"
+      ],
+      "reason": "Deny admission: source effects are confirmed, human review rejects the proposal, and the consumed reservation is not released for recovery. reservation_resolved fails because consumed reservations cannot permit a successor; its status is known, not uncertain. The required reservation_unresolved code identifies this failed admission check. No claim or successor is created."
+    }
+  ],
+  "extensions": {
+    "fixture": {
+      "synthetic": true,
+      "description": "Synthetic conforming v0.3 recovery denial: later authoritative evidence confirms a source effect after its unknown-outcome held closure. Human review rejects and admission denies despite established finality and permanent fencing. The consumed source reservation is not reused, and no successor is created. No real external action, fencing, or human review has occurred.",
+      "validation_boundary": "Schema and fixture consistency checks do not prove external truth, human identity, revocation, or cross-document uniqueness. Full v0.3 semantic validator support is a separate deliverable.",
+      "external_reference_registry": {
+        "urn:example:tacp:v03:recovery-confirmed-effect:policy:recovery-v1": {
+          "kind": "immutable_recovery_policy",
+          "version": "recovery-v1",
+          "allowed_source_dispositions": [
+            "held"
+          ],
+          "allowed_reconciliation_statuses": [
+            "confirmed_not_dispatched",
+            "confirmed_no_effect"
+          ],
+          "max_successors": 1,
+          "max_total_dispatches": 2,
+          "recovery_chains": false,
+          "source_budget_limit": 20,
+          "recovery_budget_limit": 10,
+          "successor_budget_limit": 20,
+          "combined_authorized_limit": 50,
+          "unit": "work_units",
+          "resource_accounting": "Handoff costs one unit. The finality receipt, effect audit, reservation-ledger read, and permanent-fence operation/check cost four more, reaching five used and two reserved at reconciliation. Human rejection and denial bookkeeping consume the remaining two: seven used, zero reserved. No claim or successor work occurs. Source usage remains ten; combined actual usage is seventeen within the separately authorized budgets. The candidate budget is never activated."
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:authorization:recovery-read-v1": {
+          "kind": "authorization_snapshot",
+          "authorized_actor": "example-gate-01",
+          "source_mission_id": "mission-v03-source-0001",
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "scope": [
+            "operation_receipt",
+            "effect_audit",
+            "reservation_ledger",
+            "fence_receipt"
+          ],
+          "valid_from": "2026-09-29T02:00:07Z",
+          "valid_until": "2026-09-29T02:02:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:authorization:fence-control-v1": {
+          "kind": "authorization_snapshot",
+          "authorized_actor": "example-gate-01",
+          "source_mission_id": "mission-v03-source-0001",
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "scope": [
+            "install_permanent_source_mission_fence"
+          ],
+          "valid_from": "2026-09-29T02:00:07Z",
+          "valid_until": "2026-09-29T02:02:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry": {
+          "kind": "authoritative_runtime_registry",
+          "description": "Synthetic registry outside agent control; serializes dispatch, fencing, reservations, and successor claims."
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:identity:human-operator": {
+          "kind": "authenticated_human_identity",
+          "subject": "example-human-operator",
+          "authentication": "Synthetic human authentication receipt; not an actual authenticated user."
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:authority:human-recovery-review-v1": {
+          "kind": "reviewer_authority",
+          "subject": "example-human-operator",
+          "recovery_policy_ref": "urn:example:tacp:v03:recovery-confirmed-effect:policy:recovery-v1",
+          "valid_from": "2026-09-29T02:00:07Z",
+          "valid_until": "2026-09-29T02:02:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:receipt:human-review-0001": {
+          "kind": "human_review_receipt",
+          "subject": "example-human-operator",
+          "handoff_ref": "handoff-0001",
+          "reconciliation_ref": "reconciliation-0001",
+          "recovery_id": "recovery-confirmed-effect-0001",
+          "candidate": {
+            "mission_id": "mission-v03-successor-0001",
+            "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+            "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+            "observation_scope": [
+              "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+              "urn:example:tacp:v03:recovery-confirmed-effect:evidence:conditional-update-contract"
+            ],
+            "authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:successor:authorization:operator-grant-v1",
+            "policy_ref": "urn:example:tacp:v03:recovery-confirmed-effect:successor:policy:demo-v1",
+            "limits": {
+              "max_review_rounds": 2,
+              "deadline_at": "2026-09-29T02:05:00Z",
+              "max_observation_age_seconds": 60,
+              "max_execution_attempts": 1,
+              "resource_budgets": [
+                {
+                  "budget_id": "work",
+                  "unit": "work_units",
+                  "limit": 20
+                }
+              ],
+              "max_dispatch_check_age_seconds": 5
+            },
+            "expected_results": [
+              {
+                "condition_id": "expected-value-one",
+                "description": "The target value equals 1."
+              }
+            ],
+            "stop_conditions": [
+              {
+                "condition_id": "stop-unexpected-change",
+                "description": "A data field other than value changed, excluding the expected revision-token update."
+              }
+            ]
+          },
+          "decision": "reject",
+          "reviewed_at": "2026-09-29T02:00:40Z",
+          "valid_until": "2026-09-29T02:01:30Z",
+          "single_use": true,
+          "revoked": false,
+          "review_summary": "Reject this recovery proposal. The later receipt and effect audit attribute a committed external effect to the source operation; v0.3 does not permit a successor after confirmed effect. Terminal execution and fencing do not undo that effect. Preserve the held source and unknown receipt, keep the consumed reservation non-reusable, and do not create another mission for this recovery."
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:evidence:reservation_ledger": {
+          "kind": "reservation_ledger",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "source_execution_ref": "source-execution-0001",
+          "source_reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001",
+          "status": "consumed",
+          "source_dispatch_count": 1,
+          "unresolved_reservation_count": 0,
+          "old_reservation_reusable": false,
+          "description": "The source reservation remains permanently consumed with dispatch_count=1. Its formerly unresolved outcome is reconciled, but the reservation is not released for another attempt. No successor reservation is created.",
+          "consumed_at": "2026-09-29T02:00:16Z"
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:evidence:fence_receipt": {
+          "kind": "fence_receipt",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "installed_at": "2026-09-29T02:00:18Z",
+          "control_authorization_ref": "urn:example:tacp:v03:recovery-confirmed-effect:authorization:fence-control-v1",
+          "status": "enforced",
+          "permanent": true,
+          "coverage": [
+            "queued",
+            "in_flight",
+            "scheduled",
+            "replayable"
+          ],
+          "scope": "Reject every future dispatch from the source mission permanently. Only a uniquely claimed successor with its own mission-bound reservation may use the same stable operation ID.",
+          "source_execution_ref": "source-execution-0001",
+          "source_reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001"
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:evidence:operation_receipt": {
+          "kind": "operation_receipt",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "source_execution_ref": "source-execution-0001",
+          "source_reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001",
+          "execution_finality": "terminal",
+          "terminated_at": "2026-09-29T02:00:17Z",
+          "outcome": "succeeded",
+          "source_dispatch_count": 1,
+          "mutation_started": true,
+          "committed_at": "2026-09-29T02:00:16Z",
+          "new_revision": "r2",
+          "reason": "The request dispatched at 02:00:06Z committed after source tracking and closure had ended. The service supplies this authoritative receipt at reconciliation; it does not rewrite the earlier unknown tracking receipt."
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:evidence:effect_audit": {
+          "kind": "effect_audit",
+          "issuer_ref": "urn:example:tacp:v03:recovery-confirmed-effect:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+          "source_execution_ref": "source-execution-0001",
+          "source_reservation_ref": "urn:example:tacp:v03:recovery-confirmed-effect:source:reservation:attempt-0001",
+          "audit_start": "2026-09-29T02:00:06Z",
+          "audit_end": "2026-09-29T02:00:19Z",
+          "coverage_complete": true,
+          "transient_effect_count": 0,
+          "partial_effect_count": 0,
+          "committed_effect_count": 1,
+          "reason": "Operation-correlated execution and mutation journals attribute exactly one committed update to the source operation. The earlier unchanged snapshot was taken before this commit. Attribution comes from the receipt and complete effect journals, not from snapshot equality.",
+          "effects": [
+            {
+              "committed_at": "2026-09-29T02:00:16Z",
+              "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+              "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+              "source_execution_ref": "source-execution-0001",
+              "before": {
+                "value": 0,
+                "sentinel": "unchanged",
+                "revision": "r1"
+              },
+              "after": {
+                "value": 1,
+                "sentinel": "unchanged",
+                "revision": "r2"
+              }
+            }
+          ]
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:successor:authorization:operator-grant-v1": {
+          "kind": "authorization_snapshot",
+          "issuer": "example-human-operator",
+          "authorized_executor": "example-executor-01",
+          "allowed_action": {
+            "operation_id": "operation-v03-recovery-confirmed-effect-0001",
+            "target_ref": "urn:example:tacp:v03:recovery-confirmed-effect:demo-store:configuration",
+            "operation": "compare_and_set",
+            "parameters": {
+              "expected_revision": "r1",
+              "field": "value",
+              "new_value": 1
+            }
+          },
+          "valid_from": "2026-09-29T02:00:30Z",
+          "valid_until": "2026-09-29T02:05:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v03:recovery-confirmed-effect:successor:policy:demo-v1": {
+          "kind": "immutable_policy_snapshot",
+          "version": "demo-v1",
+          "resource_accounting": "One work unit for each of two observations, assessment, review, dispatch check, execution, verification, and closure; two units for gate admission/checking. Mission creation costs zero. At the initial gate, four units are used and six reserved. Gate finalization and the dispatch check consume two more units: six used and four reserved. Execution, post-observation, verification, and closure consume the remaining four units. Final usage is ten units within the twenty-unit limit.",
+          "expected_result_evaluator": "Read target.value and compare with integer 1.",
+          "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+        }
+      },
+      "runtime_summary": {
+        "source_dispatches": 1,
+        "successor_dispatches": 0,
+        "total_dispatches": 1,
+        "successor_count": 0,
+        "claim_created": false,
+        "claim_consume_count": 0,
+        "source_records_immutable": true,
+        "source_execution_finality": "terminal",
+        "source_fence_status": "enforced",
+        "source_reservation_status": "consumed",
+        "source_committed_effect_count": 1,
+        "automatic_retry_permitted": false,
+        "successor_reservation_created": false
+      }
+    }
+  }
+}
