@@ -1,0 +1,5589 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TACP v0.3.0 Mission and Recovery Bundles",
+  "description": "Structural validation for specs/tacp-v0.3.md. Accepts standalone closed missions or bounded human-reviewed recovery bundles. Does not prove runtime authority, evidence truth, or cross-document uniqueness.",
+  "$comment": "Use strict JSON parsing (reject duplicate members and non-finite numbers) and date-time format assertion. Separate v0.3 semantic validation is REQUIRED for all inherited v0.2 semantics, record IDs and references, chronological order and fractional-precision expiry comparisons, source integrity, candidate equality and operation continuity, new authorization identity, issue carryover and resolution, recovery usage and budgets, evidence-reference uniqueness/freshness, human identity binding, start windows, and successor reservation identity. Runtime enforcement additionally requires authenticated human authority, trusted evidence, revocation checks, persistent fences, and atomic cross-document claim/operation deduplication. Existing scripts/validate.py does not yet implement v0.3. Only local schema references are used.",
+  "$defs": {
+    "nonempty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reference": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque record or deployment reference. Resolution, type, order, and authenticity require separate validation."
+    },
+    "utc_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$",
+      "$comment": "Enable date-time format assertion. The pattern enforces UTC syntax; format checking must reject invalid calendar dates. Relative time ordering is semantic validation."
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reference"
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "nonempty_references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reference"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "check_result": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "unknown"
+      ]
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "target_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "operation": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "parameters": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "operation_id",
+        "target_ref",
+        "operation",
+        "parameters"
+      ],
+      "additionalProperties": false
+    },
+    "condition": {
+      "type": "object",
+      "properties": {
+        "condition_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "description": {
+          "$ref": "#/$defs/nonempty_string"
+        }
+      },
+      "required": [
+        "condition_id",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "resource_budget": {
+      "type": "object",
+      "properties": {
+        "budget_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "unit": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "limit": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "budget_id",
+        "unit",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "gate_resource_usage": {
+      "type": "object",
+      "properties": {
+        "budget_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "used": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reserved": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "budget_id",
+        "used",
+        "reserved"
+      ],
+      "additionalProperties": false
+    },
+    "closure_resource_usage": {
+      "type": "object",
+      "properties": {
+        "budget_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "used": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "budget_id",
+        "used"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "source_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "retrieved_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        }
+      },
+      "required": [
+        "source_ref",
+        "retrieved_at"
+      ],
+      "additionalProperties": false
+    },
+    "target_state": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "value": {
+          "$ref": "#/$defs/nonempty_string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "unknown"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "const": "unknown"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prerequisite": {
+      "type": "object",
+      "properties": {
+        "prerequisite_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "description": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "check_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      },
+      "required": [
+        "prerequisite_id",
+        "description",
+        "check_ref"
+      ],
+      "additionalProperties": false
+    },
+    "open_issue": {
+      "type": "object",
+      "properties": {
+        "issue_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "description": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "blocks_execution": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "issue_id",
+        "description",
+        "blocks_execution"
+      ],
+      "additionalProperties": false
+    },
+    "review_check": {
+      "type": "object",
+      "properties": {
+        "question": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "method": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "finding": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/references"
+        }
+      },
+      "required": [
+        "question",
+        "method",
+        "finding",
+        "evidence_refs"
+      ],
+      "additionalProperties": false,
+      "$comment": "Empty evidence_refs is allowed only when finding explicitly remains unverified. This natural-language requirement needs semantic review."
+    },
+    "issue_update": {
+      "type": "object",
+      "properties": {
+        "issue_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "resolved"
+          ]
+        },
+        "explanation": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/references"
+        },
+        "blocks_execution": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "issue_id",
+        "status",
+        "explanation",
+        "evidence_refs",
+        "blocks_execution"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "resolved"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "blocks_execution": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "resolved"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "prerequisite_result": {
+      "type": "object",
+      "properties": {
+        "prerequisite_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "result": {
+          "$ref": "#/$defs/check_result"
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      },
+      "required": [
+        "prerequisite_id",
+        "result",
+        "evidence_ref"
+      ],
+      "additionalProperties": false
+    },
+    "expected_result_check": {
+      "type": "object",
+      "properties": {
+        "condition_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "met",
+            "not_met",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/nonempty_references"
+        }
+      },
+      "required": [
+        "condition_id",
+        "result",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "stop_condition_check": {
+      "type": "object",
+      "properties": {
+        "condition_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "triggered",
+            "clear",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/nonempty_references"
+        }
+      },
+      "required": [
+        "condition_id",
+        "result",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "remaining_issue": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "blocks_completion": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "description",
+        "blocks_completion"
+      ],
+      "additionalProperties": false
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_review_rounds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "max_observation_age_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_execution_attempts": {
+          "type": "integer",
+          "const": 1
+        },
+        "resource_budgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource_budget"
+          },
+          "minItems": 1
+        },
+        "max_dispatch_check_age_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "max_review_rounds",
+        "deadline_at",
+        "max_observation_age_seconds",
+        "max_execution_attempts",
+        "resource_budgets",
+        "max_dispatch_check_age_seconds"
+      ],
+      "additionalProperties": false
+    },
+    "mission": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "mission"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "controller"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "objective": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "observation_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "authorization_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "limits": {
+          "$ref": "#/$defs/limits"
+        },
+        "expected_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 1
+        },
+        "stop_conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "objective",
+        "operation_id",
+        "observation_scope",
+        "authorization_ref",
+        "policy_ref",
+        "limits",
+        "expected_results",
+        "stop_conditions"
+      ],
+      "additionalProperties": false,
+      "title": "TACP mission record"
+    },
+    "observation": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "observation"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "scout"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "phase": {
+          "type": "string",
+          "enum": [
+            "pre_execution",
+            "post_execution"
+          ]
+        },
+        "observed_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "target_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "target_state": {
+          "$ref": "#/$defs/target_state"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          },
+          "minItems": 1
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "execution_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "phase",
+        "observed_at",
+        "target_ref",
+        "target_state",
+        "sources",
+        "facts",
+        "uncertainties"
+      ],
+      "additionalProperties": false,
+      "title": "TACP observation record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "phase": {
+                "const": "post_execution"
+              }
+            },
+            "required": [
+              "phase"
+            ]
+          },
+          "then": {
+            "required": [
+              "execution_ref"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "execution_ref"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "assessment": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "assessment"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "analyst"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "supersedes_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "observation_refs": {
+          "$ref": "#/$defs/nonempty_references"
+        },
+        "action": {
+          "$ref": "#/$defs/action"
+        },
+        "rationale": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prerequisite"
+          },
+          "minItems": 1
+        },
+        "open_issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/open_issue"
+          },
+          "minItems": 0
+        },
+        "recommendation": {
+          "type": "string",
+          "enum": [
+            "ready",
+            "hold",
+            "stop"
+          ]
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "revision",
+        "observation_refs",
+        "action",
+        "rationale",
+        "prerequisites",
+        "open_issues",
+        "recommendation"
+      ],
+      "additionalProperties": false,
+      "title": "TACP assessment record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "revision": {
+                "const": 1
+              }
+            },
+            "required": [
+              "revision"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "supersedes_ref"
+              ]
+            }
+          },
+          "else": {
+            "required": [
+              "supersedes_ref"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "recommendation": {
+                "const": "ready"
+              }
+            },
+            "required": [
+              "recommendation"
+            ]
+          },
+          "then": {
+            "properties": {
+              "open_issues": {
+                "items": {
+                  "properties": {
+                    "blocks_execution": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "review"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "analyst"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "assessment_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "previous_review_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "questions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonempty_string"
+          },
+          "minItems": 1
+        },
+        "checks_performed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/review_check"
+          },
+          "minItems": 1
+        },
+        "reused_observation_refs": {
+          "$ref": "#/$defs/references"
+        },
+        "new_observation_refs": {
+          "$ref": "#/$defs/references"
+        },
+        "issue_updates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue_update"
+          },
+          "minItems": 0
+        },
+        "remaining_blocking_issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonempty_string"
+          },
+          "minItems": 0
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "reobserve",
+            "hold",
+            "stop"
+          ]
+        },
+        "decision_change": {
+          "type": "string",
+          "enum": [
+            "initial",
+            "retained",
+            "revised"
+          ]
+        },
+        "change_reason": {
+          "$ref": "#/$defs/nonempty_string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "round",
+        "assessment_ref",
+        "questions",
+        "checks_performed",
+        "reused_observation_refs",
+        "new_observation_refs",
+        "issue_updates",
+        "remaining_blocking_issues",
+        "decision",
+        "decision_change",
+        "change_reason"
+      ],
+      "additionalProperties": false,
+      "title": "TACP review record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "round": {
+                "const": 1
+              }
+            },
+            "required": [
+              "round"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "previous_review_ref"
+              ]
+            },
+            "properties": {
+              "decision_change": {
+                "const": "initial"
+              }
+            }
+          },
+          "else": {
+            "required": [
+              "previous_review_ref"
+            ],
+            "properties": {
+              "decision_change": {
+                "type": "string",
+                "enum": [
+                  "retained",
+                  "revised"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "pass"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          },
+          "then": {
+            "properties": {
+              "remaining_blocking_issues": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "pass"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          },
+          "then": {
+            "properties": {
+              "issue_updates": {
+                "items": {
+                  "properties": {
+                    "blocks_execution": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "gate_checks": {
+      "type": "object",
+      "properties": {
+        "reference_integrity": {
+          "$ref": "#/$defs/check_result"
+        },
+        "review_passed": {
+          "$ref": "#/$defs/check_result"
+        },
+        "authorization_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "scope_match": {
+          "$ref": "#/$defs/check_result"
+        },
+        "observation_fresh": {
+          "$ref": "#/$defs/check_result"
+        },
+        "target_state_match": {
+          "$ref": "#/$defs/check_result"
+        },
+        "budgets_available": {
+          "$ref": "#/$defs/check_result"
+        },
+        "deadline_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "stop_conditions_clear": {
+          "$ref": "#/$defs/check_result"
+        },
+        "operation_available": {
+          "$ref": "#/$defs/check_result"
+        }
+      },
+      "required": [
+        "reference_integrity",
+        "review_passed",
+        "authorization_valid",
+        "scope_match",
+        "observation_fresh",
+        "target_state_match",
+        "budgets_available",
+        "deadline_valid",
+        "stop_conditions_clear",
+        "operation_available"
+      ],
+      "additionalProperties": false
+    },
+    "gate": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "gate"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "gate"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "assessment_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "review_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "action": {
+          "$ref": "#/$defs/action"
+        },
+        "authorization_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "valid_until": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "checks": {
+          "$ref": "#/$defs/gate_checks"
+        },
+        "prerequisite_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prerequisite_result"
+          },
+          "minItems": 1
+        },
+        "resource_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gate_resource_usage"
+          },
+          "minItems": 1
+        },
+        "enforcement_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "assessment_ref",
+        "review_ref",
+        "action",
+        "authorization_ref",
+        "policy_ref",
+        "checked_at",
+        "valid_until",
+        "checks",
+        "prerequisite_results",
+        "resource_usage",
+        "enforcement_ref",
+        "decision",
+        "reasons"
+      ],
+      "additionalProperties": false,
+      "title": "TACP gate record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "allow"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "reference_integrity": {
+                    "const": "pass"
+                  },
+                  "review_passed": {
+                    "const": "pass"
+                  },
+                  "authorization_valid": {
+                    "const": "pass"
+                  },
+                  "scope_match": {
+                    "const": "pass"
+                  },
+                  "observation_fresh": {
+                    "const": "pass"
+                  },
+                  "target_state_match": {
+                    "const": "pass"
+                  },
+                  "budgets_available": {
+                    "const": "pass"
+                  },
+                  "deadline_valid": {
+                    "const": "pass"
+                  },
+                  "stop_conditions_clear": {
+                    "const": "pass"
+                  },
+                  "operation_available": {
+                    "const": "pass"
+                  }
+                }
+              },
+              "prerequisite_results": {
+                "items": {
+                  "properties": {
+                    "result": {
+                      "const": "pass"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "execution"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "executor"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "gate_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "assessment_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "action": {
+          "$ref": "#/$defs/action"
+        },
+        "started_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "finished_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "attempt": {
+          "type": "integer",
+          "const": 1
+        },
+        "reservation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "succeeded",
+            "failed",
+            "unknown"
+          ]
+        },
+        "reported_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "result_refs": {
+          "$ref": "#/$defs/references"
+        },
+        "dispatch_check_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "gate_ref",
+        "assessment_ref",
+        "action",
+        "started_at",
+        "finished_at",
+        "attempt",
+        "reservation_ref",
+        "outcome",
+        "reported_effects",
+        "uncertainties",
+        "result_refs",
+        "dispatch_check_ref"
+      ],
+      "additionalProperties": false,
+      "title": "TACP execution record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "unknown"
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "properties": {
+              "uncertainties": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "verification"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "analyst"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "execution_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "observation_refs": {
+          "$ref": "#/$defs/nonempty_references"
+        },
+        "expected_result_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/expected_result_check"
+          },
+          "minItems": 1
+        },
+        "stop_condition_checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stop_condition_check"
+          },
+          "minItems": 1
+        },
+        "unexpected_changes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "remaining_issues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/remaining_issue"
+          },
+          "minItems": 0
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "held",
+            "stopped"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "execution_ref",
+        "observation_refs",
+        "expected_result_checks",
+        "stop_condition_checks",
+        "unexpected_changes",
+        "remaining_issues",
+        "decision",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "title": "TACP verification record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          },
+          "then": {
+            "properties": {
+              "expected_result_checks": {
+                "items": {
+                  "properties": {
+                    "result": {
+                      "const": "met"
+                    }
+                  }
+                }
+              },
+              "stop_condition_checks": {
+                "items": {
+                  "properties": {
+                    "result": {
+                      "const": "clear"
+                    }
+                  }
+                }
+              },
+              "remaining_issues": {
+                "items": {
+                  "properties": {
+                    "blocks_completion": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stop_condition_checks": {
+                "contains": {
+                  "properties": {
+                    "result": {
+                      "const": "triggered"
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "stop_condition_checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "decision": {
+                "const": "stopped"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "closure": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "closure"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "controller"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "disposition": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "held",
+            "stopped"
+          ]
+        },
+        "basis_refs": {
+          "$ref": "#/$defs/nonempty_references"
+        },
+        "verification_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "execution_status": {
+          "type": "string",
+          "enum": [
+            "not_dispatched",
+            "recorded",
+            "uncertain"
+          ]
+        },
+        "reservation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "resource_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/closure_resource_usage"
+          },
+          "minItems": 1
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/closure_reason_code"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "disposition",
+        "basis_refs",
+        "execution_status",
+        "reason",
+        "resource_usage",
+        "reason_codes"
+      ],
+      "additionalProperties": false,
+      "title": "TACP closure record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "required": [
+              "verification_ref"
+            ],
+            "properties": {
+              "execution_status": {
+                "const": "recorded"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "execution_status": {
+                "const": "uncertain"
+              }
+            },
+            "required": [
+              "execution_status"
+            ]
+          },
+          "then": {
+            "required": [
+              "reservation_ref"
+            ],
+            "properties": {
+              "disposition": {
+                "type": "string",
+                "enum": [
+                  "held",
+                  "stopped"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "const": [
+                  "verified_result"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "held"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "items": {
+                  "not": {
+                    "type": "string",
+                    "enum": [
+                      "verified_result",
+                      "stop_condition_triggered",
+                      "explicit_stop"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "stopped"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "type": "string",
+                  "enum": [
+                    "stop_condition_triggered",
+                    "explicit_stop"
+                  ]
+                },
+                "items": {
+                  "not": {
+                    "const": "verified_result"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "execution_status": {
+                "const": "uncertain"
+              }
+            },
+            "required": [
+              "execution_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "reservation_unresolved"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "review_limit_reached"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "unresolved_blocking_issue"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "record": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/mission"
+        },
+        {
+          "$ref": "#/$defs/observation"
+        },
+        {
+          "$ref": "#/$defs/assessment"
+        },
+        {
+          "$ref": "#/$defs/review"
+        },
+        {
+          "$ref": "#/$defs/gate"
+        },
+        {
+          "$ref": "#/$defs/execution"
+        },
+        {
+          "$ref": "#/$defs/verification"
+        },
+        {
+          "$ref": "#/$defs/closure"
+        },
+        {
+          "$ref": "#/$defs/dispatch_check"
+        }
+      ]
+    },
+    "authorization_check": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "expired",
+            "revoked",
+            "not_yet_valid",
+            "unknown"
+          ]
+        },
+        "scope_match": {
+          "$ref": "#/$defs/check_result"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/references"
+        },
+        "valid_from": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "valid_until": {
+          "$ref": "#/$defs/utc_timestamp"
+        }
+      },
+      "required": [
+        "status",
+        "scope_match",
+        "evidence_refs"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {
+        "valid_from": [
+          "valid_until"
+        ],
+        "valid_until": [
+          "valid_from"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "expired",
+                  "not_yet_valid"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "valid_from",
+              "valid_until"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "not": {
+                  "const": "unknown"
+                }
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_refs": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "target_check": {
+      "type": "object",
+      "properties": {
+        "target_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "basis_observation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "expected_state": {
+          "$ref": "#/$defs/target_state"
+        },
+        "current_state": {
+          "$ref": "#/$defs/target_state"
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "match",
+            "changed",
+            "unknown"
+          ]
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/references"
+        }
+      },
+      "required": [
+        "target_ref",
+        "basis_observation_ref",
+        "expected_state",
+        "current_state",
+        "result",
+        "evidence_refs"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "result": {
+                "type": "string",
+                "enum": [
+                  "match",
+                  "changed"
+                ]
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence_refs": {
+                "minItems": 1
+              },
+              "expected_state": {
+                "properties": {
+                  "kind": {
+                    "not": {
+                      "const": "unknown"
+                    }
+                  }
+                }
+              },
+              "current_state": {
+                "properties": {
+                  "kind": {
+                    "not": {
+                      "const": "unknown"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "dispatch_check": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "dispatch_check"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "gate"
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional non-overriding extension data."
+        },
+        "gate_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "assessment_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "review_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "action": {
+          "$ref": "#/$defs/action"
+        },
+        "authorization_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "dispatch_before": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "authorization_check": {
+          "$ref": "#/$defs/authorization_check"
+        },
+        "target_check": {
+          "$ref": "#/$defs/target_check"
+        },
+        "checks": {
+          "$ref": "#/$defs/gate_checks"
+        },
+        "resource_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gate_resource_usage"
+          },
+          "minItems": 1
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonempty_string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "gate_ref",
+        "assessment_ref",
+        "review_ref",
+        "action",
+        "authorization_ref",
+        "policy_ref",
+        "checked_at",
+        "authorization_check",
+        "target_check",
+        "checks",
+        "resource_usage",
+        "decision",
+        "reasons"
+      ],
+      "additionalProperties": false,
+      "title": "TACP dispatch_check record",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "allow"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          },
+          "then": {
+            "required": [
+              "dispatch_before"
+            ],
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "status": {
+                    "const": "active"
+                  },
+                  "scope_match": {
+                    "const": "pass"
+                  }
+                }
+              },
+              "target_check": {
+                "properties": {
+                  "result": {
+                    "const": "match"
+                  }
+                }
+              },
+              "checks": {
+                "properties": {
+                  "reference_integrity": {
+                    "const": "pass"
+                  },
+                  "review_passed": {
+                    "const": "pass"
+                  },
+                  "authorization_valid": {
+                    "const": "pass"
+                  },
+                  "scope_match": {
+                    "const": "pass"
+                  },
+                  "observation_fresh": {
+                    "const": "pass"
+                  },
+                  "target_state_match": {
+                    "const": "pass"
+                  },
+                  "budgets_available": {
+                    "const": "pass"
+                  },
+                  "deadline_valid": {
+                    "const": "pass"
+                  },
+                  "stop_conditions_clear": {
+                    "const": "pass"
+                  },
+                  "operation_available": {
+                    "const": "pass"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "required": [
+                "dispatch_before"
+              ]
+            },
+            "properties": {
+              "checks": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "reference_integrity": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "review_passed": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "authorization_valid": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "scope_match": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "observation_fresh": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "target_state_match": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "budgets_available": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "deadline_valid": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "stop_conditions_clear": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "operation_available": {
+                        "type": "string",
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "status": {
+                    "const": "active"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "authorization_valid": {
+                    "const": "pass"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "status": {
+                    "const": "expired"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "authorization_valid": {
+                    "const": "fail"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "status": {
+                    "const": "revoked"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "authorization_valid": {
+                    "const": "fail"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "status": {
+                    "const": "not_yet_valid"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "authorization_valid": {
+                    "const": "fail"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "status": {
+                    "const": "unknown"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "authorization_valid": {
+                    "const": "unknown"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "scope_match": {
+                    "const": "pass"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "scope_match": {
+                    "const": "pass"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "scope_match": {
+                    "const": "fail"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "scope_match": {
+                    "const": "fail"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authorization_check": {
+                "properties": {
+                  "scope_match": {
+                    "const": "unknown"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "scope_match": {
+                    "const": "unknown"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "target_check": {
+                "properties": {
+                  "result": {
+                    "const": "match"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "target_state_match": {
+                    "const": "pass"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "target_check": {
+                "properties": {
+                  "result": {
+                    "const": "changed"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "target_state_match": {
+                    "const": "fail"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "target_check": {
+                "properties": {
+                  "result": {
+                    "const": "unknown"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "checks": {
+                "properties": {
+                  "target_state_match": {
+                    "const": "unknown"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "$comment": "A passing record never authorizes dispatch by itself. Runtime revalidation and atomic prerequisite enforcement remain mandatory."
+    },
+    "closure_reason_code": {
+      "type": "string",
+      "enum": [
+        "verified_result",
+        "review_limit_reached",
+        "deadline_reached",
+        "resource_limit_reached",
+        "authorization_expired",
+        "authorization_revoked",
+        "authorization_not_yet_valid",
+        "authorization_unknown",
+        "authorization_scope_mismatch",
+        "target_state_changed",
+        "target_state_unknown",
+        "dispatch_check_expired",
+        "execution_outcome_unknown",
+        "reservation_unresolved",
+        "verification_incomplete",
+        "expected_result_not_met",
+        "unresolved_blocking_issue",
+        "gate_denied",
+        "dispatch_check_denied",
+        "stop_condition_triggered",
+        "explicit_stop"
+      ]
+    },
+    "mission_bundle": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/record"
+          },
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/mission"
+            }
+          ],
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "record_type": {
+                    "const": "mission"
+                  }
+                },
+                "required": [
+                  "record_type"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "record_type": {
+                    "const": "closure"
+                  }
+                },
+                "required": [
+                  "record_type"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "record_type": {
+                    "const": "execution"
+                  }
+                },
+                "required": [
+                  "record_type"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "verification"
+                    }
+                  },
+                  "required": [
+                    "record_type"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "verification_ref"
+                  ]
+                }
+              },
+              "else": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    }
+                  },
+                  "required": [
+                    "record_type"
+                  ],
+                  "not": {
+                    "required": [
+                      "verification_ref"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "execution_status": {
+                      "const": "recorded"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "execution_status"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "execution"
+                    }
+                  },
+                  "required": [
+                    "record_type"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "execution_status": {
+                      "const": "not_dispatched"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "execution_status"
+                  ]
+                }
+              },
+              "then": {
+                "not": {
+                  "contains": {
+                    "type": "object",
+                    "properties": {
+                      "record_type": {
+                        "const": "execution"
+                      }
+                    },
+                    "required": [
+                      "record_type"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "disposition": {
+                      "const": "completed"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "disposition"
+                  ]
+                }
+              },
+              "then": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "record_type": {
+                          "const": "verification"
+                        },
+                        "decision": {
+                          "const": "completed"
+                        }
+                      },
+                      "required": [
+                        "record_type",
+                        "decision"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "record_type": {
+                          "const": "execution"
+                        },
+                        "outcome": {
+                          "const": "succeeded"
+                        }
+                      },
+                      "required": [
+                        "record_type",
+                        "outcome"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "contains": {
+                "type": "object",
+                "properties": {
+                  "record_type": {
+                    "const": "dispatch_check"
+                  }
+                },
+                "required": [
+                  "record_type"
+                ]
+              },
+              "minContains": 0,
+              "maxContains": 1
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    }
+                  },
+                  "required": [
+                    "record_type"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "gate"
+                    },
+                    "decision": {
+                      "const": "allow"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "execution"
+                    }
+                  },
+                  "required": [
+                    "record_type"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "allow"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision"
+                  ]
+                }
+              },
+              "then": {
+                "allOf": [
+                  {
+                    "not": {
+                      "contains": {
+                        "type": "object",
+                        "properties": {
+                          "record_type": {
+                            "const": "execution"
+                          }
+                        },
+                        "required": [
+                          "record_type"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "record_type": {
+                          "const": "closure"
+                        },
+                        "disposition": {
+                          "type": "string",
+                          "enum": [
+                            "held",
+                            "stopped"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "record_type",
+                        "disposition"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "type": "object",
+                      "properties": {
+                        "record_type": {
+                          "const": "closure"
+                        },
+                        "reason_codes": {
+                          "contains": {
+                            "const": "dispatch_check_denied"
+                          }
+                        }
+                      },
+                      "required": [
+                        "record_type",
+                        "reason_codes"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "execution"
+                    },
+                    "outcome": {
+                      "const": "unknown"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "outcome"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "execution_outcome_unknown"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "gate"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "gate_denied"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    },
+                    "authorization_check": {
+                      "properties": {
+                        "status": {
+                          "const": "expired"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision",
+                    "authorization_check"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "authorization_expired"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    },
+                    "authorization_check": {
+                      "properties": {
+                        "status": {
+                          "const": "revoked"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision",
+                    "authorization_check"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "authorization_revoked"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    },
+                    "authorization_check": {
+                      "properties": {
+                        "status": {
+                          "const": "not_yet_valid"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision",
+                    "authorization_check"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "authorization_not_yet_valid"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    },
+                    "authorization_check": {
+                      "properties": {
+                        "status": {
+                          "const": "unknown"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision",
+                    "authorization_check"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "authorization_unknown"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    },
+                    "authorization_check": {
+                      "properties": {
+                        "scope_match": {
+                          "const": "fail"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision",
+                    "authorization_check"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "authorization_scope_mismatch"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    },
+                    "target_check": {
+                      "properties": {
+                        "result": {
+                          "const": "changed"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision",
+                    "target_check"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "target_state_changed"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            },
+            {
+              "if": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "dispatch_check"
+                    },
+                    "decision": {
+                      "const": "deny"
+                    },
+                    "target_check": {
+                      "properties": {
+                        "result": {
+                          "const": "unknown"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "decision",
+                    "target_check"
+                  ]
+                }
+              },
+              "then": {
+                "contains": {
+                  "type": "object",
+                  "properties": {
+                    "record_type": {
+                      "const": "closure"
+                    },
+                    "reason_codes": {
+                      "contains": {
+                        "const": "target_state_unknown"
+                      }
+                    }
+                  },
+                  "required": [
+                    "record_type",
+                    "reason_codes"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "document_type": {
+          "const": "mission_bundle"
+        },
+        "recovery_ref": {
+          "$ref": "#/$defs/nonempty_string"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "mission_id",
+        "records",
+        "document_type"
+      ],
+      "additionalProperties": false
+    },
+    "standalone_mission_bundle": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/mission_bundle"
+        },
+        {
+          "not": {
+            "required": [
+              "recovery_ref"
+            ]
+          }
+        }
+      ]
+    },
+    "successor_mission_bundle": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/mission_bundle"
+        },
+        {
+          "required": [
+            "recovery_ref"
+          ]
+        }
+      ]
+    },
+    "source_mission_bundle": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/standalone_mission_bundle"
+        },
+        {
+          "properties": {
+            "records": {
+              "contains": {
+                "properties": {
+                  "record_type": {
+                    "const": "closure"
+                  },
+                  "disposition": {
+                    "enum": [
+                      "held",
+                      "stopped"
+                    ]
+                  }
+                },
+                "required": [
+                  "record_type",
+                  "disposition"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "successor_candidate": {
+      "type": "object",
+      "properties": {
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "objective": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "observation_scope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "authorization_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "limits": {
+          "$ref": "#/$defs/limits"
+        },
+        "expected_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 1
+        },
+        "stop_conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 1
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "mission_id",
+        "operation_id",
+        "objective",
+        "observation_scope",
+        "authorization_ref",
+        "policy_ref",
+        "limits",
+        "expected_results",
+        "stop_conditions"
+      ],
+      "additionalProperties": false
+    },
+    "issue_carryover": {
+      "type": "object",
+      "properties": {
+        "issue_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "source_record_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "blocks_execution": {
+          "type": "boolean"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "issue_id",
+        "source_record_ref",
+        "blocks_execution"
+      ],
+      "additionalProperties": false
+    },
+    "recovery_limits": {
+      "type": "object",
+      "properties": {
+        "deadline_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "max_evidence_age_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "resource_budgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource_budget"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "deadline_at",
+        "max_evidence_age_seconds",
+        "resource_budgets"
+      ],
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "handoff"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "recovery_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "controller"
+        },
+        "source_mission_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "source_closure_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "source_operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "source_reason_codes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/closure_reason_code"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "source_execution_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "source_reservation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "issue_carryover": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue_carryover"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "candidate": {
+          "$ref": "#/$defs/successor_candidate"
+        },
+        "recovery_policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "read_authorization_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "control_authorization_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "limits": {
+          "$ref": "#/$defs/recovery_limits"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "recovery_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "source_mission_ref",
+        "source_closure_ref",
+        "source_operation_id",
+        "source_reason_codes",
+        "issue_carryover",
+        "candidate",
+        "recovery_policy_ref",
+        "read_authorization_ref",
+        "limits",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "recovery_evidence": {
+      "type": "object",
+      "properties": {
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "issuer_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "kind": {
+          "enum": [
+            "dispatch_ledger",
+            "operation_receipt",
+            "effect_audit",
+            "reservation_ledger",
+            "fence_receipt",
+            "target_snapshot",
+            "lookup_failure"
+          ]
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "evidence_ref",
+        "issuer_ref",
+        "observed_at",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "reconciliation": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "reconciliation"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "recovery_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "gate"
+        },
+        "handoff_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "status": {
+          "enum": [
+            "confirmed_not_dispatched",
+            "confirmed_no_effect",
+            "confirmed_effect",
+            "unresolved"
+          ]
+        },
+        "execution_finality": {
+          "enum": [
+            "terminal",
+            "unknown"
+          ]
+        },
+        "reservation_status": {
+          "enum": [
+            "none",
+            "released",
+            "consumed",
+            "unresolved"
+          ]
+        },
+        "fence_status": {
+          "enum": [
+            "enforced",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recovery_evidence"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "resource_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gate_resource_usage"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "recovery_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "handoff_ref",
+        "checked_at",
+        "status",
+        "execution_finality",
+        "reservation_status",
+        "fence_status",
+        "evidence",
+        "resource_usage",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "confirmed_not_dispatched"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "dispatch_ledger"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "reservation_ledger"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "fence_receipt"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "execution_finality": {
+                "const": "terminal"
+              },
+              "fence_status": {
+                "const": "enforced"
+              },
+              "reservation_status": {
+                "enum": [
+                  "none",
+                  "released"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "confirmed_no_effect"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "operation_receipt"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "effect_audit"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "reservation_ledger"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "fence_receipt"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "execution_finality": {
+                "const": "terminal"
+              },
+              "fence_status": {
+                "const": "enforced"
+              },
+              "reservation_status": {
+                "enum": [
+                  "released"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "confirmed_effect"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "operation_receipt"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "kind": {
+                          "const": "effect_audit"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "human_review": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "human_review"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "recovery_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "human"
+        },
+        "handoff_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "reconciliation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "reviewer_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "reviewer_authority_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "decision": {
+          "enum": [
+            "approve",
+            "hold",
+            "reject"
+          ]
+        },
+        "reviewed_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "valid_until": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/nonempty_references"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "recovery_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "handoff_ref",
+        "reconciliation_ref",
+        "reviewer_ref",
+        "reviewer_authority_ref",
+        "decision",
+        "reviewed_at",
+        "valid_until",
+        "evidence_refs",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "recovery_checks": {
+      "type": "object",
+      "properties": {
+        "reference_integrity": {
+          "$ref": "#/$defs/check_result"
+        },
+        "source_terminal": {
+          "$ref": "#/$defs/check_result"
+        },
+        "reconciliation_eligible": {
+          "$ref": "#/$defs/check_result"
+        },
+        "evidence_fresh": {
+          "$ref": "#/$defs/check_result"
+        },
+        "human_approval_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "recovery_policy_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "read_authorization_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "old_operation_fenced": {
+          "$ref": "#/$defs/check_result"
+        },
+        "reservation_resolved": {
+          "$ref": "#/$defs/check_result"
+        },
+        "successor_unique": {
+          "$ref": "#/$defs/check_result"
+        },
+        "budgets_available": {
+          "$ref": "#/$defs/check_result"
+        },
+        "deadline_valid": {
+          "$ref": "#/$defs/check_result"
+        }
+      },
+      "required": [
+        "reference_integrity",
+        "source_terminal",
+        "reconciliation_eligible",
+        "evidence_fresh",
+        "human_approval_valid",
+        "recovery_policy_valid",
+        "read_authorization_valid",
+        "old_operation_fenced",
+        "reservation_resolved",
+        "successor_unique",
+        "budgets_available",
+        "deadline_valid"
+      ],
+      "additionalProperties": false
+    },
+    "recovery_reason_code": {
+      "enum": [
+        "successor_admitted",
+        "reference_invalid",
+        "source_ineligible",
+        "reconciliation_ineligible",
+        "evidence_stale_or_unknown",
+        "human_approval_invalid",
+        "recovery_policy_invalid",
+        "read_authorization_invalid",
+        "old_operation_unfenced",
+        "reservation_unresolved",
+        "successor_conflict",
+        "resource_limit_reached",
+        "deadline_reached"
+      ]
+    },
+    "recovery_admission": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "record_type": {
+          "const": "recovery_admission"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "recovery_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "gate"
+        },
+        "handoff_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "reconciliation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "human_review_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "decision": {
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "checks": {
+          "$ref": "#/$defs/recovery_checks"
+        },
+        "resource_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/gate_resource_usage"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/recovery_reason_code"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "start_before": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "claim_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "recovery_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "handoff_ref",
+        "reconciliation_ref",
+        "human_review_ref",
+        "checked_at",
+        "decision",
+        "checks",
+        "resource_usage",
+        "reason_codes",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "allow"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          },
+          "then": {
+            "required": [
+              "start_before",
+              "claim_ref"
+            ],
+            "properties": {
+              "checks": {
+                "properties": {
+                  "reference_integrity": {
+                    "const": "pass"
+                  },
+                  "source_terminal": {
+                    "const": "pass"
+                  },
+                  "reconciliation_eligible": {
+                    "const": "pass"
+                  },
+                  "evidence_fresh": {
+                    "const": "pass"
+                  },
+                  "human_approval_valid": {
+                    "const": "pass"
+                  },
+                  "recovery_policy_valid": {
+                    "const": "pass"
+                  },
+                  "read_authorization_valid": {
+                    "const": "pass"
+                  },
+                  "old_operation_fenced": {
+                    "const": "pass"
+                  },
+                  "reservation_resolved": {
+                    "const": "pass"
+                  },
+                  "successor_unique": {
+                    "const": "pass"
+                  },
+                  "budgets_available": {
+                    "const": "pass"
+                  },
+                  "deadline_valid": {
+                    "const": "pass"
+                  }
+                }
+              },
+              "reason_codes": {
+                "const": [
+                  "successor_admitted"
+                ]
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "start_before"
+                  ]
+                },
+                {
+                  "required": [
+                    "claim_ref"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "checks": {
+                "anyOf": [
+                  {
+                    "properties": {
+                      "reference_integrity": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reference_integrity"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "source_terminal": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "source_terminal"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "reconciliation_eligible": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reconciliation_eligible"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "evidence_fresh": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "evidence_fresh"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "human_approval_valid": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "human_approval_valid"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "recovery_policy_valid": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "recovery_policy_valid"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "read_authorization_valid": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "read_authorization_valid"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "old_operation_fenced": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "old_operation_fenced"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "reservation_resolved": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reservation_resolved"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "successor_unique": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "successor_unique"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "budgets_available": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "budgets_available"
+                    ]
+                  },
+                  {
+                    "properties": {
+                      "deadline_valid": {
+                        "enum": [
+                          "fail",
+                          "unknown"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "deadline_valid"
+                    ]
+                  }
+                ]
+              },
+              "reason_codes": {
+                "not": {
+                  "contains": {
+                    "const": "successor_admitted"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "reference_integrity": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reference_integrity"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "reference_invalid"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "source_terminal": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "source_terminal"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "source_ineligible"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "reconciliation_eligible": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reconciliation_eligible"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "reconciliation_ineligible"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "evidence_fresh": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "evidence_fresh"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "evidence_stale_or_unknown"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "human_approval_valid": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "human_approval_valid"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "human_approval_invalid"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "recovery_policy_valid": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "recovery_policy_valid"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "recovery_policy_invalid"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "read_authorization_valid": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "read_authorization_valid"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "read_authorization_invalid"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "old_operation_fenced": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "old_operation_fenced"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "old_operation_unfenced"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "reservation_resolved": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "reservation_resolved"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "reservation_unresolved"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "successor_unique": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "successor_unique"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "successor_conflict"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "budgets_available": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "budgets_available"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "resource_limit_reached"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "deny"
+              },
+              "checks": {
+                "properties": {
+                  "deadline_valid": {
+                    "enum": [
+                      "fail",
+                      "unknown"
+                    ]
+                  }
+                },
+                "required": [
+                  "deadline_valid"
+                ]
+              }
+            },
+            "required": [
+              "decision",
+              "checks"
+            ]
+          },
+          "then": {
+            "properties": {
+              "reason_codes": {
+                "contains": {
+                  "const": "deadline_reached"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "recovery_bundle": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.3.0"
+        },
+        "document_type": {
+          "const": "recovery_bundle"
+        },
+        "recovery_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "source": {
+          "$ref": "#/$defs/source_mission_bundle"
+        },
+        "records": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/handoff"
+            },
+            {
+              "$ref": "#/$defs/reconciliation"
+            },
+            {
+              "$ref": "#/$defs/human_review"
+            },
+            {
+              "$ref": "#/$defs/recovery_admission"
+            }
+          ],
+          "items": false
+        },
+        "successor": {
+          "$ref": "#/$defs/successor_mission_bundle"
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "document_type",
+        "recovery_id",
+        "source",
+        "records"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "successor"
+            ]
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "decision": {
+                        "const": "allow"
+                      }
+                    },
+                    "required": [
+                      "decision"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "decision": {
+                        "const": "allow"
+                      }
+                    },
+                    "required": [
+                      "decision"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {},
+                      {
+                        "properties": {
+                          "status": {
+                            "enum": [
+                              "confirmed_not_dispatched",
+                              "confirmed_no_effect"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "status"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {},
+                      {},
+                      {
+                        "properties": {
+                          "decision": {
+                            "const": "approve"
+                          }
+                        },
+                        "required": [
+                          "decision"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "decision": {
+                        "const": "approve"
+                      }
+                    },
+                    "required": [
+                      "decision"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "confirmed_not_dispatched",
+                          "confirmed_no_effect"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "confirmed_effect",
+                          "unresolved"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {},
+                      {},
+                      {
+                        "properties": {
+                          "decision": {
+                            "enum": [
+                              "hold",
+                              "reject"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "decision"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {},
+                      {},
+                      {},
+                      {
+                        "properties": {
+                          "decision": {
+                            "const": "deny"
+                          },
+                          "checks": {
+                            "properties": {
+                              "reconciliation_eligible": {
+                                "enum": [
+                                  "fail",
+                                  "unknown"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "reconciliation_eligible"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "decision",
+                          "checks"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "decision": {
+                        "enum": [
+                          "hold",
+                          "reject"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "decision"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "decision": {
+                        "const": "deny"
+                      },
+                      "checks": {
+                        "properties": {
+                          "human_approval_valid": {
+                            "enum": [
+                              "fail",
+                              "unknown"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "human_approval_valid"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "decision",
+                      "checks"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {
+                    "properties": {
+                      "fence_status": {
+                        "const": "unknown"
+                      }
+                    },
+                    "required": [
+                      "fence_status"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "checks": {
+                        "properties": {
+                          "old_operation_fenced": {
+                            "enum": [
+                              "fail",
+                              "unknown"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "old_operation_fenced"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "checks"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {
+                    "properties": {
+                      "reservation_status": {
+                        "enum": [
+                          "consumed",
+                          "unresolved"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "reservation_status"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "checks": {
+                        "properties": {
+                          "reservation_resolved": {
+                            "enum": [
+                              "fail",
+                              "unknown"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "reservation_resolved"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "checks"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "records": {
+                    "contains": {
+                      "properties": {
+                        "record_type": {
+                          "const": "execution"
+                        }
+                      },
+                      "required": [
+                        "record_type"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {
+                        "required": [
+                          "source_execution_ref",
+                          "source_reservation_ref"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {},
+                      {
+                        "not": {
+                          "properties": {
+                            "status": {
+                              "const": "confirmed_not_dispatched"
+                            }
+                          },
+                          "required": [
+                            "status"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "else": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {
+                    "not": {
+                      "required": [
+                        "source_execution_ref"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "records": {
+                    "contains": {
+                      "required": [
+                        "reservation_ref"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {
+                        "required": [
+                          "source_reservation_ref"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "records": {
+                    "prefixItems": [
+                      {},
+                      {
+                        "not": {
+                          "properties": {
+                            "reservation_status": {
+                              "const": "none"
+                            }
+                          },
+                          "required": [
+                            "reservation_status"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "else": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {
+                    "not": {
+                      "required": [
+                        "source_reservation_ref"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "records": {
+                    "contains": {
+                      "properties": {
+                        "record_type": {
+                          "const": "execution"
+                        },
+                        "outcome": {
+                          "const": "succeeded"
+                        }
+                      },
+                      "required": [
+                        "record_type",
+                        "outcome"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "confirmed_effect",
+                          "unresolved"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "records": {
+                    "contains": {
+                      "properties": {
+                        "record_type": {
+                          "const": "closure"
+                        },
+                        "execution_status": {
+                          "const": "not_dispatched"
+                        }
+                      },
+                      "required": [
+                        "record_type",
+                        "execution_status"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "confirmed_not_dispatched",
+                          "unresolved"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "status"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "protocol_version": {
+      "const": "0.3.0"
+    }
+  },
+  "required": [
+    "protocol_version"
+  ],
+  "oneOf": [
+    {
+      "$ref": "#/$defs/standalone_mission_bundle"
+    },
+    {
+      "$ref": "#/$defs/recovery_bundle"
+    }
+  ]
+}
