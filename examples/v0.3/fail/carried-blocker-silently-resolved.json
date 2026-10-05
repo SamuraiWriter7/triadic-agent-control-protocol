@@ -1,0 +1,1482 @@
+{
+  "protocol_version": "0.3.0",
+  "document_type": "recovery_bundle",
+  "recovery_id": "carried-blocker-silently-resolved-0001",
+  "source": {
+    "protocol_version": "0.3.0",
+    "document_type": "mission_bundle",
+    "mission_id": "mission-v03-source-0001",
+    "records": [
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "mission",
+        "record_id": "mission-v03-source-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:00Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+        "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+        "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+        "observation_scope": [
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:conditional-update-contract",
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:conditional-update-contract"
+        ],
+        "authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:source:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:source:policy:demo-v1",
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-09-29T02:05:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+        "expected_results": [
+          {
+            "condition_id": "expected-value-one",
+            "description": "The target value equals 1."
+          }
+        ],
+        "stop_conditions": [
+          {
+            "condition_id": "stop-unexpected-change",
+            "description": "A data field other than value changed, excluding the expected revision-token update."
+          }
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "observation",
+        "record_id": "source-observation-before-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:02Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+        "phase": "pre_execution",
+        "observed_at": "2026-09-29T02:00:01Z",
+        "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+        "target_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "sources": [
+          {
+            "source_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:store-before",
+            "retrieved_at": "2026-09-29T02:00:01Z"
+          }
+        ],
+        "facts": [
+          "The target snapshot contains value=0, sentinel=unchanged, and revision=r1."
+        ],
+        "uncertainties": []
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "assessment",
+        "record_id": "source-assessment-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:03Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "revision": 1,
+        "observation_refs": [
+          "source-observation-before-0001"
+        ],
+        "action": {
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "rationale": "The snapshot shows value=0 at revision r1. The proposed compare_and_set operation is expected to provide a conditional single-field update; the challenge review must test that assumption before any gate request.",
+        "prerequisites": [
+          {
+            "prerequisite_id": "revision-current",
+            "description": "The target revision remains r1 through dispatch.",
+            "check_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:source:check:revision-equals-r1"
+          }
+        ],
+        "open_issues": [],
+        "recommendation": "ready"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "review",
+        "record_id": "source-review-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:04Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "round": 1,
+        "assessment_ref": "source-assessment-0001",
+        "questions": [
+          "Does the collected evidence establish that compare_and_set checks the revision atomically and changes only the selected field?"
+        ],
+        "checks_performed": [
+          {
+            "question": "Does the collected evidence establish atomic and single-field behavior?",
+            "method": "Inspect the observation sources and compare them with the assumptions in the proposed action.",
+            "finding": "The snapshot establishes target state but does not establish runtime behavior. Acquire the scoped runtime contract and a fresh target snapshot before proceeding.",
+            "evidence_refs": [
+              "source-observation-before-0001"
+            ]
+          }
+        ],
+        "reused_observation_refs": [
+          "source-observation-before-0001"
+        ],
+        "new_observation_refs": [],
+        "issue_updates": [
+          {
+            "issue_id": "issue-runtime-contract-unconfirmed",
+            "status": "open",
+            "explanation": "Atomic revision checking and single-field mutation are unsupported by the currently collected evidence. This blocks execution.",
+            "evidence_refs": [
+              "source-observation-before-0001"
+            ],
+            "blocks_execution": true
+          }
+        ],
+        "remaining_blocking_issues": [
+          "The runtime contract has not been observed; the action could violate its conditional or single-field assumptions."
+        ],
+        "decision": "reobserve",
+        "decision_change": "initial",
+        "change_reason": "The initial challenge found an unsupported runtime assumption. Readiness is withdrawn and additional scoped observation is required; no gate request or action dispatch is permitted yet."
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "observation",
+        "record_id": "source-observation-additional-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:06Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+        "phase": "pre_execution",
+        "observed_at": "2026-09-29T02:00:05Z",
+        "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+        "target_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "sources": [
+          {
+            "source_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:store-reobserved",
+            "retrieved_at": "2026-09-29T02:00:05Z"
+          },
+          {
+            "source_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:conditional-update-contract",
+            "retrieved_at": "2026-09-29T02:00:05Z"
+          }
+        ],
+        "facts": [
+          "The refreshed target snapshot still contains value=0, sentinel=unchanged, and revision=r1.",
+          "The acquired runtime documentation describes a revision argument and a selected-field update.",
+          "The documentation does not establish whether revision checking and mutation are atomic."
+        ],
+        "uncertainties": [
+          "Atomic revision checking at dispatch remains unverified."
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "assessment",
+        "record_id": "source-assessment-0002",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:07Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "revision": 2,
+        "observation_refs": [
+          "source-observation-before-0001",
+          "source-observation-additional-0001"
+        ],
+        "action": {
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "rationale": "The refreshed snapshot confirms the target remains at r1, but the acquired documentation does not establish atomic revision checking. This missing execution prerequisite remains unresolved; recommend holding the action.",
+        "prerequisites": [
+          {
+            "prerequisite_id": "revision-current",
+            "description": "The target revision remains r1 through dispatch.",
+            "check_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:source:check:revision-equals-r1"
+          }
+        ],
+        "open_issues": [
+          {
+            "issue_id": "issue-runtime-contract-unconfirmed",
+            "description": "Atomic revision checking through dispatch is not established by the available runtime documentation.",
+            "blocks_execution": true
+          }
+        ],
+        "recommendation": "hold",
+        "supersedes_ref": "source-assessment-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "review",
+        "record_id": "source-review-0002",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:08Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "round": 2,
+        "assessment_ref": "source-assessment-0002",
+        "questions": [
+          "Does the acquired documentation establish atomic revision checking?",
+          "Does the unchanged target snapshot resolve the missing runtime guarantee?"
+        ],
+        "checks_performed": [
+          {
+            "question": "Does the acquired documentation establish atomic revision checking?",
+            "method": "Inspect the additional observation for an explicit atomic check-and-mutate guarantee.",
+            "finding": "The documentation describes a revision argument but leaves atomicity unverified. The execution-blocking issue remains open.",
+            "evidence_refs": [
+              "source-observation-additional-0001"
+            ]
+          },
+          {
+            "question": "Does the unchanged target snapshot resolve the missing runtime guarantee?",
+            "method": "Compare both snapshots and distinguish observed target stability from a dispatch-time enforcement guarantee.",
+            "finding": "Both snapshots show r1, but this does not establish that the target cannot change between a check and mutation.",
+            "evidence_refs": [
+              "source-observation-before-0001",
+              "source-observation-additional-0001"
+            ]
+          }
+        ],
+        "reused_observation_refs": [
+          "source-observation-before-0001",
+          "source-observation-additional-0001"
+        ],
+        "new_observation_refs": [],
+        "issue_updates": [
+          {
+            "issue_id": "issue-runtime-contract-unconfirmed",
+            "status": "open",
+            "explanation": "The additional documentation does not establish atomic revision checking. No issue resolution or independent corroboration is claimed.",
+            "evidence_refs": [
+              "source-observation-additional-0001"
+            ],
+            "blocks_execution": true
+          }
+        ],
+        "remaining_blocking_issues": [
+          "Atomic revision checking through dispatch remains unverified."
+        ],
+        "decision": "hold",
+        "decision_change": "revised",
+        "change_reason": "The previous reobserve decision becomes hold: review round 2 has reached max_review_rounds=2, and the execution-blocking issue remains unresolved. A third review and action dispatch are prohibited in this mission.",
+        "previous_review_ref": "source-review-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "closure",
+        "record_id": "source-closure-0001",
+        "mission_id": "mission-v03-source-0001",
+        "created_at": "2026-09-29T02:00:09Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+        "disposition": "held",
+        "basis_refs": [
+          "mission-v03-source-0001",
+          "source-assessment-0002",
+          "source-review-0002"
+        ],
+        "execution_status": "not_dispatched",
+        "reason": "The second and last permitted review still leaves atomic dispatch behavior unverified. The controller closes the mission as held, with no gate request, operation reservation, or execution attempt. Post-execution verification is absent because no action was dispatched.",
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 7
+          }
+        ],
+        "reason_codes": [
+          "review_limit_reached",
+          "unresolved_blocking_issue"
+        ]
+      }
+    ],
+    "extensions": {
+      "fixture": {
+        "synthetic": true,
+        "description": "Synthetic v0.3 source mission for explicit blocker carryover and evidence-based resolution; no external action was performed.",
+        "validation_boundary": "Illustrative evidence and authority only; document checks do not authenticate external truth or runtime enforcement.",
+        "external_reference_registry": {
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration": {
+            "kind": "demo_target",
+            "initial": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:authorization:operator-grant-v1": {
+            "kind": "authorization_snapshot",
+            "issuer": "example-human-operator",
+            "authorized_executor": "example-executor-01",
+            "allowed_action": {
+              "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+              "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+              "operation": "compare_and_set",
+              "parameters": {
+                "expected_revision": "r1",
+                "field": "value",
+                "new_value": 1
+              }
+            },
+            "valid_from": "2026-09-29T01:59:00Z",
+            "valid_until": "2026-09-29T02:05:00Z",
+            "revoked": false
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:policy:demo-v1": {
+            "kind": "immutable_policy_snapshot",
+            "version": "demo-v1",
+            "resource_accounting": "One work unit for each of two observations, two assessments, two reviews, and closure. Mission creation costs zero. Six units are consumed before closure; one control-plane unit is reserved for closure bookkeeping. Final usage is seven units, within the twenty-unit budget.",
+            "expected_result_evaluator": "Read target.value and compare with integer 1.",
+            "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:conditional-update-contract": {
+            "kind": "runtime_documentation_excerpt",
+            "acquired_at": "2026-09-29T02:00:05Z",
+            "revision_argument_documented": true,
+            "single_field_update_documented": true,
+            "atomic_revision_check": "not_established",
+            "mismatch_effect": "not_established",
+            "document_scope": "Conditional-update runtime contract and supporting documentation for this target.",
+            "snapshot_id": "source-contract-snapshot-0001"
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:store-before": {
+            "kind": "snapshot",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "captured_at": "2026-09-29T02:00:01Z",
+            "state": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:check:revision-equals-r1": {
+            "kind": "prerequisite_check",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "expected_revision": "r1"
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:store-reobserved": {
+            "kind": "snapshot",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "captured_at": "2026-09-29T02:00:05Z",
+            "state": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          }
+        },
+        "review_evidence_classification": "Additional documentation contributes information but does not resolve atomicity. Assessment revision 2 already references the additional observation, so review round 2 correctly classifies it as reused. Repetition and unchanged snapshots do not constitute an atomicity guarantee.",
+        "controller_state_at_closure": {
+          "review_rounds_consumed": 2,
+          "max_review_rounds": 2,
+          "gate_requests": 0,
+          "operation_reservations": 0,
+          "dispatch_attempts": 0,
+          "unresolved_reservations": 0,
+          "execution_not_dispatched_confirmed": true,
+          "reason": "Review-limit exhaustion with an unresolved execution-blocking issue.",
+          "dispatch_checks": 0,
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "remaining_blocking_issue_ids": [
+            "issue-runtime-contract-unconfirmed"
+          ]
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "handoff",
+      "record_id": "handoff-0001",
+      "recovery_id": "carried-blocker-silently-resolved-0001",
+      "created_at": "2026-09-29T02:00:10Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+      "source_mission_ref": "mission-v03-source-0001",
+      "source_closure_ref": "source-closure-0001",
+      "source_operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+      "source_reason_codes": [
+        "review_limit_reached",
+        "unresolved_blocking_issue"
+      ],
+      "issue_carryover": [
+        {
+          "issue_id": "issue-runtime-contract-unconfirmed",
+          "source_record_ref": "source-review-0002",
+          "blocks_execution": true
+        }
+      ],
+      "candidate": {
+        "mission_id": "mission-v03-successor-0001",
+        "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+        "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+        "observation_scope": [
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:conditional-update-contract",
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:conditional-update-contract"
+        ],
+        "authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:policy:demo-v1",
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-09-29T02:05:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+        "expected_results": [
+          {
+            "condition_id": "expected-value-one",
+            "description": "The target value equals 1."
+          }
+        ],
+        "stop_conditions": [
+          {
+            "condition_id": "stop-unexpected-change",
+            "description": "A data field other than value changed, excluding the expected revision-token update."
+          }
+        ]
+      },
+      "recovery_policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:policy:recovery-v1",
+      "read_authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:authorization:recovery-read-v1",
+      "control_authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:authorization:fence-control-v1",
+      "limits": {
+        "deadline_at": "2026-09-29T02:02:00Z",
+        "max_evidence_age_seconds": 120,
+        "resource_budgets": [
+          {
+            "budget_id": "recovery-work",
+            "unit": "work_units",
+            "limit": 10
+          }
+        ]
+      },
+      "reason": "The source exhausted its two review rounds with the runtime-contract blocker still open and did not dispatch. Propose one bounded successor under new authority and a fixed budget. Carry the exact blocker ID and blocking flag from the latest source review; neither recovery eligibility nor human approval resolves it. The successor must obtain fresh evidence and explicitly resolve it in a later assessment revision and review."
+    },
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "reconciliation",
+      "record_id": "reconciliation-0001",
+      "recovery_id": "carried-blocker-silently-resolved-0001",
+      "created_at": "2026-09-29T02:00:21Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "handoff_ref": "handoff-0001",
+      "checked_at": "2026-09-29T02:00:20Z",
+      "status": "confirmed_not_dispatched",
+      "execution_finality": "terminal",
+      "reservation_status": "none",
+      "fence_status": "enforced",
+      "evidence": [
+        {
+          "evidence_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:evidence:dispatch_ledger",
+          "issuer_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "kind": "dispatch_ledger"
+        },
+        {
+          "evidence_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:evidence:reservation_ledger",
+          "issuer_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "kind": "reservation_ledger"
+        },
+        {
+          "evidence_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:evidence:fence_receipt",
+          "issuer_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "kind": "fence_receipt"
+        }
+      ],
+      "resource_usage": [
+        {
+          "budget_id": "recovery-work",
+          "used": 4,
+          "reserved": 3
+        }
+      ],
+      "reason": "Authoritative fixture ledgers report zero source dispatches and no operation reservation. A durable source-mission fence rejects all queued, in-flight, scheduled, and replayable source work. The source can never dispatch later; the stable operation identity remains available only through the single approved successor claim."
+    },
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "human_review",
+      "record_id": "human_review-0001",
+      "recovery_id": "carried-blocker-silently-resolved-0001",
+      "created_at": "2026-09-29T02:00:41Z",
+      "producer_id": "example-human-operator",
+      "producer_role": "human",
+      "handoff_ref": "handoff-0001",
+      "reconciliation_ref": "reconciliation-0001",
+      "reviewer_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:identity:human-operator",
+      "reviewer_authority_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:authority:human-recovery-review-v1",
+      "decision": "approve",
+      "reviewed_at": "2026-09-29T02:00:40Z",
+      "valid_until": "2026-09-29T02:01:30Z",
+      "evidence_refs": [
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:receipt:human-review-0001"
+      ],
+      "reason": "I approve this exact candidate after reviewing the source review-limit closure, carried runtime-contract blocker, non-dispatch evidence, and permanent source fence. The source must remain closed. Policy permits one fresh mission cycle, not another round inside the old mission. Approval does not clear the blocker: the successor must retain it initially, then resolve it with fresh contract evidence, an assessment revision, and explicit review before execution."
+    },
+    {
+      "protocol_version": "0.3.0",
+      "record_type": "recovery_admission",
+      "record_id": "recovery_admission-0001",
+      "recovery_id": "carried-blocker-silently-resolved-0001",
+      "created_at": "2026-09-29T02:00:51Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+      "handoff_ref": "handoff-0001",
+      "reconciliation_ref": "reconciliation-0001",
+      "human_review_ref": "human_review-0001",
+      "checked_at": "2026-09-29T02:00:50Z",
+      "decision": "allow",
+      "checks": {
+        "reference_integrity": "pass",
+        "source_terminal": "pass",
+        "reconciliation_eligible": "pass",
+        "evidence_fresh": "pass",
+        "human_approval_valid": "pass",
+        "recovery_policy_valid": "pass",
+        "read_authorization_valid": "pass",
+        "old_operation_fenced": "pass",
+        "reservation_resolved": "pass",
+        "successor_unique": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass"
+      },
+      "resource_usage": [
+        {
+          "budget_id": "recovery-work",
+          "used": 7,
+          "reserved": 0
+        }
+      ],
+      "reason_codes": [
+        "successor_admitted"
+      ],
+      "reason": "All recovery conditions pass. A single-use claim binds the immutable source closure, operation, recovery, and exact candidate. The successor must atomically consume it before start_before while rechecking human approval, policy, and fencing.",
+      "start_before": "2026-09-29T02:01:20Z",
+      "claim_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:claim:successor-0001"
+    }
+  ],
+  "successor": {
+    "protocol_version": "0.3.0",
+    "document_type": "mission_bundle",
+    "mission_id": "mission-v03-successor-0001",
+    "records": [
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "mission",
+        "record_id": "mission-v03-successor-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:00Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+        "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+        "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+        "observation_scope": [
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:conditional-update-contract",
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:conditional-update-contract"
+        ],
+        "authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:policy:demo-v1",
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-09-29T02:05:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+        "expected_results": [
+          {
+            "condition_id": "expected-value-one",
+            "description": "The target value equals 1."
+          }
+        ],
+        "stop_conditions": [
+          {
+            "condition_id": "stop-unexpected-change",
+            "description": "A data field other than value changed, excluding the expected revision-token update."
+          }
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "observation",
+        "record_id": "successor-observation-before-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:02Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+        "phase": "pre_execution",
+        "observed_at": "2026-09-29T02:01:01Z",
+        "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+        "target_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "sources": [
+          {
+            "source_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:store-before",
+            "retrieved_at": "2026-09-29T02:01:01Z"
+          }
+        ],
+        "facts": [
+          "The target snapshot contains value=0, sentinel=unchanged, and revision=r1."
+        ],
+        "uncertainties": []
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "assessment",
+        "record_id": "successor-assessment-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:03Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "revision": 1,
+        "observation_refs": [
+          "successor-observation-before-0001"
+        ],
+        "action": {
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "rationale": "The carried runtime-contract blocker remains open and execution-blocking. The fresh target snapshot confirms value=0 at r1 but supplies no missing atomicity guarantee. Retain the same issue ID and flag; acquire fresh scoped contract evidence before revising this assessment.",
+        "prerequisites": [
+          {
+            "prerequisite_id": "revision-current",
+            "description": "The target revision remains r1 through dispatch.",
+            "check_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:check:revision-equals-r1"
+          }
+        ],
+        "open_issues": [
+          {
+            "issue_id": "issue-runtime-contract-unconfirmed",
+            "description": "Carried source blocker: atomic revision checking through dispatch remains unconfirmed. The successor initial snapshot does not resolve this runtime guarantee.",
+            "blocks_execution": true
+          }
+        ],
+        "recommendation": "hold"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "review",
+        "record_id": "successor-review-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:04Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "round": 1,
+        "assessment_ref": "successor-assessment-0001",
+        "questions": [
+          "Does the collected evidence establish that compare_and_set checks the revision atomically and changes only the selected field?"
+        ],
+        "checks_performed": [
+          {
+            "question": "Does the collected evidence establish atomic and single-field behavior?",
+            "method": "Inspect the observation sources and compare them with the assumptions in the proposed action.",
+            "finding": "The snapshot establishes target state but does not establish runtime behavior. Acquire the scoped runtime contract and a fresh target snapshot before proceeding.",
+            "evidence_refs": [
+              "successor-observation-before-0001"
+            ]
+          }
+        ],
+        "reused_observation_refs": [
+          "successor-observation-before-0001"
+        ],
+        "new_observation_refs": [],
+        "issue_updates": [
+          {
+            "issue_id": "issue-runtime-contract-unconfirmed",
+            "status": "open",
+            "explanation": "The carried issue remains open with the same ID and blocking flag. The successor first observation does not establish atomic revision checking or single-field behavior.",
+            "evidence_refs": [
+              "successor-observation-before-0001"
+            ],
+            "blocks_execution": true
+          }
+        ],
+        "remaining_blocking_issues": [
+          "The runtime contract has not been observed; the action could violate its conditional or single-field assumptions."
+        ],
+        "decision": "reobserve",
+        "decision_change": "initial",
+        "change_reason": "The initial successor review confirms the carried blocker remains open. Reobserve the scoped contract and target; no gate request or execution is permitted before an evidenced resolution in a later assessment revision."
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "observation",
+        "record_id": "successor-observation-additional-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:06Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+        "phase": "pre_execution",
+        "observed_at": "2026-09-29T02:01:05Z",
+        "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+        "target_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "sources": [
+          {
+            "source_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:store-reobserved",
+            "retrieved_at": "2026-09-29T02:01:05Z"
+          },
+          {
+            "source_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:conditional-update-contract",
+            "retrieved_at": "2026-09-29T02:01:05Z"
+          }
+        ],
+        "facts": [
+          "The refreshed target snapshot still contains value=0, sentinel=unchanged, and revision=r1.",
+          "The acquired runtime contract requires an atomic revision comparison and rejects mismatches without mutation.",
+          "The acquired runtime contract limits mutation to the selected field plus the revision token."
+        ],
+        "uncertainties": []
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "assessment",
+        "record_id": "successor-assessment-0002",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:07Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "revision": 2,
+        "observation_refs": [
+          "successor-observation-before-0001",
+          "successor-observation-additional-0001"
+        ],
+        "action": {
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "rationale": "The additional observation supplies the previously missing runtime contract and confirms the target is still at r1. The conditional single-field action is now supported by the recorded evidence. The runtime-contract issue can be resolved, subject to review of this revision.",
+        "prerequisites": [
+          {
+            "prerequisite_id": "revision-current",
+            "description": "The target revision remains r1 through dispatch.",
+            "check_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:check:revision-equals-r1"
+          }
+        ],
+        "open_issues": [],
+        "recommendation": "ready",
+        "supersedes_ref": "successor-assessment-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "review",
+        "record_id": "successor-review-0002",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:08Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "round": 2,
+        "assessment_ref": "successor-assessment-0002",
+        "questions": [
+          "Does the newly acquired contract resolve the unsupported runtime assumption?",
+          "Did the target change while the missing evidence was being acquired?"
+        ],
+        "checks_performed": [
+          {
+            "question": "Does the acquired contract resolve the unsupported runtime assumption?",
+            "method": "Compare the additional observation of the runtime contract with the unchanged action and revision prerequisite.",
+            "finding": "The contract explicitly requires atomic revision checking and single-field mutation, resolving the missing support for the action. Live enforcement remains the gate responsibility.",
+            "evidence_refs": [
+              "successor-observation-additional-0001"
+            ]
+          },
+          {
+            "question": "Did the target change while evidence was being acquired?",
+            "method": "Compare the initial and refreshed snapshots.",
+            "finding": "Both snapshots show value=0, sentinel=unchanged, and revision=r1. The runtime must still enforce r1 at dispatch.",
+            "evidence_refs": [
+              "successor-observation-before-0001",
+              "successor-observation-additional-0001"
+            ]
+          }
+        ],
+        "reused_observation_refs": [
+          "successor-observation-before-0001",
+          "successor-observation-additional-0001"
+        ],
+        "new_observation_refs": [],
+        "issue_updates": [],
+        "remaining_blocking_issues": [],
+        "decision": "pass",
+        "decision_change": "revised",
+        "change_reason": "The previous reobserve decision becomes pass because missing contract evidence was acquired and incorporated in assessment revision 2. The additional observation is classified as reused here because assessment revision 2 already referenced it. No independent corroboration is claimed.",
+        "previous_review_ref": "successor-review-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "gate",
+        "record_id": "successor-gate-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:09Z",
+        "producer_id": "example-gate-01",
+        "producer_role": "gate",
+        "assessment_ref": "successor-assessment-0002",
+        "review_ref": "successor-review-0002",
+        "action": {
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:policy:demo-v1",
+        "checked_at": "2026-09-29T02:01:09Z",
+        "valid_until": "2026-09-29T02:01:30Z",
+        "checks": {
+          "reference_integrity": "pass",
+          "review_passed": "pass",
+          "authorization_valid": "pass",
+          "scope_match": "pass",
+          "observation_fresh": "pass",
+          "target_state_match": "pass",
+          "budgets_available": "pass",
+          "deadline_valid": "pass",
+          "stop_conditions_clear": "pass",
+          "operation_available": "pass"
+        },
+        "prerequisite_results": [
+          {
+            "prerequisite_id": "revision-current",
+            "result": "pass",
+            "evidence_ref": "successor-observation-additional-0001"
+          }
+        ],
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 7,
+            "reserved": 6
+          }
+        ],
+        "enforcement_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:runtime:conditional-update-v1",
+        "decision": "allow",
+        "reasons": [
+          "The latest assessment and its second challenge review resolve the previously missing runtime evidence.",
+          "Authorization permits the unchanged exact action, and current revision r1 will be enforced atomically.",
+          "The last permitted review passed. Time and resources remain for the mandatory final dispatch check, one execution attempt, outcome verification, and closure."
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "dispatch_check",
+        "record_id": "successor-dispatch-check-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:09.500Z",
+        "producer_id": "example-gate-01",
+        "producer_role": "gate",
+        "assessment_ref": "successor-assessment-0002",
+        "review_ref": "successor-review-0002",
+        "action": {
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:authorization:operator-grant-v1",
+        "policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:policy:demo-v1",
+        "checks": {
+          "reference_integrity": "pass",
+          "review_passed": "pass",
+          "authorization_valid": "pass",
+          "scope_match": "pass",
+          "observation_fresh": "pass",
+          "target_state_match": "pass",
+          "budgets_available": "pass",
+          "deadline_valid": "pass",
+          "stop_conditions_clear": "pass",
+          "operation_available": "pass"
+        },
+        "gate_ref": "successor-gate-0001",
+        "checked_at": "2026-09-29T02:01:09.250Z",
+        "dispatch_before": "2026-09-29T02:01:14Z",
+        "authorization_check": {
+          "status": "active",
+          "scope_match": "pass",
+          "evidence_refs": [
+            "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:authorization-at-dispatch-check"
+          ],
+          "valid_from": "2026-09-29T02:00:30Z",
+          "valid_until": "2026-09-29T02:05:00Z"
+        },
+        "target_check": {
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "basis_observation_ref": "successor-observation-additional-0001",
+          "expected_state": {
+            "kind": "revision",
+            "value": "r1"
+          },
+          "current_state": {
+            "kind": "revision",
+            "value": "r1"
+          },
+          "result": "match",
+          "evidence_refs": [
+            "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:target-at-dispatch-check"
+          ]
+        },
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 9,
+            "reserved": 4
+          }
+        ],
+        "decision": "allow",
+        "reasons": [
+          "The final authorization check reports an active, unrevoked grant covering the exact action and executor.",
+          "The target is still at reviewed revision r1; the runtime will enforce revision equality atomically at dispatch.",
+          "All observations remain fresh, no stop condition is present, and time and resources remain for one attempt and verification.",
+          "Dispatch must begin before 02:01:14Z, with no more than five seconds elapsed since this check."
+        ]
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "execution",
+        "record_id": "successor-execution-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:12Z",
+        "producer_id": "example-executor-01",
+        "producer_role": "executor",
+        "gate_ref": "successor-gate-0001",
+        "assessment_ref": "successor-assessment-0002",
+        "action": {
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+          "operation": "compare_and_set",
+          "parameters": {
+            "expected_revision": "r1",
+            "field": "value",
+            "new_value": 1
+          }
+        },
+        "started_at": "2026-09-29T02:01:10Z",
+        "finished_at": "2026-09-29T02:01:11Z",
+        "attempt": 1,
+        "reservation_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:reservation:operation-v02-reobserved-completed-0001",
+        "outcome": "succeeded",
+        "reported_effects": [
+          "value changed from 0 to 1; revision advanced from r1 to r2."
+        ],
+        "uncertainties": [],
+        "result_refs": [
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:result:operation-v02-reobserved-completed-0001"
+        ],
+        "dispatch_check_ref": "successor-dispatch-check-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "observation",
+        "record_id": "successor-observation-after-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:13Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+        "phase": "post_execution",
+        "observed_at": "2026-09-29T02:01:13Z",
+        "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+        "target_state": {
+          "kind": "revision",
+          "value": "r2"
+        },
+        "sources": [
+          {
+            "source_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:store-after",
+            "retrieved_at": "2026-09-29T02:01:13Z"
+          }
+        ],
+        "facts": [
+          "The target snapshot contains value=1, sentinel=unchanged, and revision=r2.",
+          "Compared with the pre-execution snapshot, only value and the expected revision token changed."
+        ],
+        "uncertainties": [],
+        "execution_ref": "successor-execution-0001"
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "verification",
+        "record_id": "successor-verification-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:14Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+        "execution_ref": "successor-execution-0001",
+        "observation_refs": [
+          "successor-observation-after-0001"
+        ],
+        "expected_result_checks": [
+          {
+            "condition_id": "expected-value-one",
+            "result": "met",
+            "evidence_refs": [
+              "successor-observation-after-0001"
+            ]
+          }
+        ],
+        "stop_condition_checks": [
+          {
+            "condition_id": "stop-unexpected-change",
+            "result": "clear",
+            "evidence_refs": [
+              "successor-observation-after-0001"
+            ]
+          }
+        ],
+        "unexpected_changes": [],
+        "remaining_issues": [],
+        "decision": "completed",
+        "reason": "Post-execution observation confirms value=1 and unchanged sentinel; the reported success is supported by the observed target state."
+      },
+      {
+        "protocol_version": "0.3.0",
+        "record_type": "closure",
+        "record_id": "successor-closure-0001",
+        "mission_id": "mission-v03-successor-0001",
+        "created_at": "2026-09-29T02:01:15Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+        "disposition": "completed",
+        "basis_refs": [
+          "successor-execution-0001",
+          "successor-verification-0001"
+        ],
+        "verification_ref": "successor-verification-0001",
+        "execution_status": "recorded",
+        "reason": "Additional observation supported assessment revision 2 and explicit resolution of the blocker in review round 2. The initial gate and final dispatch check allowed the unchanged action; one execution and post-execution observation established verified completion within all limits.",
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 13
+          }
+        ],
+        "reason_codes": [
+          "verified_result"
+        ]
+      }
+    ],
+    "extensions": {
+      "fixture": {
+        "synthetic": true,
+        "description": "Synthetic v0.3 successor mission for explicit blocker carryover and evidence-based resolution; no external action was performed.",
+        "validation_boundary": "Illustrative evidence and authority only; document checks do not authenticate external truth or runtime enforcement.",
+        "external_reference_registry": {
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration": {
+            "kind": "demo_target",
+            "initial": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:authorization:operator-grant-v1": {
+            "kind": "authorization_snapshot",
+            "issuer": "example-human-operator",
+            "authorized_executor": "example-executor-01",
+            "allowed_action": {
+              "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+              "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+              "operation": "compare_and_set",
+              "parameters": {
+                "expected_revision": "r1",
+                "field": "value",
+                "new_value": 1
+              }
+            },
+            "valid_from": "2026-09-29T02:00:30Z",
+            "valid_until": "2026-09-29T02:05:00Z",
+            "revoked": false
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:policy:demo-v1": {
+            "kind": "immutable_policy_snapshot",
+            "version": "demo-v1",
+            "resource_accounting": "One work unit for each of three observations, two assessments, two reviews, the final dispatch check, execution, verification, and closure; two units for gate admission/checking. Mission creation costs zero. At gate admission, seven units are used and six reserved. Gate finalization and the final dispatch check raise usage to nine, leaving four reserved for execution, post-observation, verification, and closure. Final usage is thirteen units within the twenty-unit budget.",
+            "expected_result_evaluator": "Read target.value and compare with integer 1.",
+            "stop_condition_evaluator": "Compare all data fields with the pre-execution snapshot; only value and the revision token may differ."
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:conditional-update-contract": {
+            "kind": "runtime_contract",
+            "atomic_revision_check": true,
+            "single_field_update": true,
+            "mismatch_effect": "No mutation",
+            "acquired_at": "2026-09-29T02:01:05Z",
+            "document_scope": "Conditional-update runtime contract and supporting documentation for this target.",
+            "snapshot_id": "successor-contract-snapshot-0001",
+            "description": "A newly acquired complete contract with the explicit atomicity guarantee omitted from the earlier source excerpt. This does not alter or replace the source evidence."
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:store-before": {
+            "kind": "snapshot",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "captured_at": "2026-09-29T02:01:01Z",
+            "state": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:store-after": {
+            "kind": "snapshot",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "captured_at": "2026-09-29T02:01:13Z",
+            "state": {
+              "value": 1,
+              "sentinel": "unchanged",
+              "revision": "r2"
+            }
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:check:revision-equals-r1": {
+            "kind": "prerequisite_check",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "expected_revision": "r1"
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:runtime:conditional-update-v1": {
+            "kind": "runtime_fixture",
+            "authorization_rechecked_at": "2026-09-29T02:01:10Z",
+            "revision_rechecked_at": "2026-09-29T02:01:10Z",
+            "observed_revision": "r1",
+            "conditional_dispatch": true,
+            "durable_operation_reservation": true,
+            "automatic_delivery_retries": false,
+            "dispatch_check_ref": "successor-dispatch-check-0001"
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:reservation:operation-v02-reobserved-completed-0001": {
+            "kind": "operation_reservation",
+            "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+            "reserved_at": "2026-09-29T02:01:10Z",
+            "dispatch_count": 1,
+            "status": "consumed",
+            "mission_id": "mission-v03-successor-0001"
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:result:operation-v02-reobserved-completed-0001": {
+            "kind": "tool_receipt",
+            "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+            "finished_at": "2026-09-29T02:01:11Z",
+            "outcome": "succeeded",
+            "new_revision": "r2"
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:store-reobserved": {
+            "kind": "snapshot",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "captured_at": "2026-09-29T02:01:05Z",
+            "state": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:authorization-at-dispatch-check": {
+            "kind": "authorization_check_evidence",
+            "checked_at": "2026-09-29T02:01:09.250Z",
+            "authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:authorization:operator-grant-v1",
+            "issuer": "example-authorization-service",
+            "status": "active",
+            "revoked": false,
+            "scope_match": "pass",
+            "executor_id": "example-executor-01",
+            "checked_action": {
+              "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+              "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+              "operation": "compare_and_set",
+              "parameters": {
+                "expected_revision": "r1",
+                "field": "value",
+                "new_value": 1
+              }
+            },
+            "valid_from": "2026-09-29T02:00:30Z",
+            "valid_until": "2026-09-29T02:05:00Z"
+          },
+          "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:target-at-dispatch-check": {
+            "kind": "target_state_check_evidence",
+            "checked_at": "2026-09-29T02:01:09.250Z",
+            "target_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+            "state": {
+              "kind": "revision",
+              "value": "r1"
+            },
+            "data": {
+              "value": 0,
+              "sentinel": "unchanged",
+              "revision": "r1"
+            }
+          }
+        },
+        "review_evidence_classification": "The additional observation supplies new information to the mission, but assessment revision 2 references it before review round 2. Therefore review round 2 lists it under reused_observation_refs, with new_observation_refs empty, as required by the specification."
+      }
+    },
+    "recovery_ref": "carried-blocker-silently-resolved-0001"
+  },
+  "extensions": {
+    "fixture": {
+      "synthetic": true,
+      "description": "Synthetic negative fixture: the carried blocker is preserved in handoff and initial successor assessment/review, but the later passing review omits the explicit resolved issue update. The later assessment has no open issue entry and the mission proceeds to execution and completion. Omission and narrative claims do not resolve a tracked blocker. No real approval or external action occurred.",
+      "validation_boundary": "Schema-valid silent-resolution violation. The inherited v0.2 issue-tracking checks detect unresolved_blocking_issue at the passing review and subsequent execution gates. The fixture is checked with a temporary v0.2 projection of its successor, not a complete v0.3 recovery validator. Full v0.3 integration and expected-error registration remain pending.",
+      "external_reference_registry": {
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:policy:recovery-v1": {
+          "kind": "immutable_recovery_policy",
+          "version": "recovery-v1",
+          "allowed_source_dispositions": [
+            "held"
+          ],
+          "allowed_reconciliation_statuses": [
+            "confirmed_not_dispatched"
+          ],
+          "max_successors": 1,
+          "max_total_dispatches": 1,
+          "recovery_chains": false,
+          "source_budget_limit": 20,
+          "recovery_budget_limit": 10,
+          "successor_budget_limit": 20,
+          "combined_authorized_limit": 50,
+          "unit": "work_units",
+          "resource_accounting": "Handoff costs one unit; fencing and the three ledger/evidence checks together cost three units, reaching four at reconciliation. Human review, admission, and atomic claim creation/consumption accounting cost three more units, prepaid through successor creation, reaching seven; no recovery work remains reserved. Source and successor accounting are separate.",
+          "permits_review_limit_recovery": true,
+          "blocker_carryover_required": true,
+          "blocker_resolution_rule": "Retain all carried issue IDs and flags in the successor first assessment. A new mission budget permits at most two successor review rounds; only fresh evidence incorporated into a later assessment revision and explicitly reviewed can resolve the blocker. No third review in either mission, no recovery chains, and no approval-based issue clearance."
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:authorization:recovery-read-v1": {
+          "kind": "authorization_snapshot",
+          "authorized_actor": "example-gate-01",
+          "source_mission_id": "mission-v03-source-0001",
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "scope": [
+            "dispatch_ledger",
+            "reservation_ledger",
+            "fence_receipt"
+          ],
+          "valid_from": "2026-09-29T02:00:07Z",
+          "valid_until": "2026-09-29T02:02:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:authorization:fence-control-v1": {
+          "kind": "authorization_snapshot",
+          "authorized_actor": "example-gate-01",
+          "source_mission_id": "mission-v03-source-0001",
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "scope": [
+            "install_permanent_source_mission_fence"
+          ],
+          "valid_from": "2026-09-29T02:00:07Z",
+          "valid_until": "2026-09-29T02:02:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:issuer:runtime-registry": {
+          "kind": "authoritative_runtime_registry",
+          "description": "Synthetic registry outside agent control; serializes dispatch, fencing, reservations, and successor claims."
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:identity:human-operator": {
+          "kind": "authenticated_human_identity",
+          "subject": "example-human-operator",
+          "authentication": "Synthetic human authentication receipt; not an actual authenticated user."
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:authority:human-recovery-review-v1": {
+          "kind": "reviewer_authority",
+          "subject": "example-human-operator",
+          "recovery_policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:policy:recovery-v1",
+          "valid_from": "2026-09-29T02:00:07Z",
+          "valid_until": "2026-09-29T02:02:00Z",
+          "revoked": false
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:receipt:human-review-0001": {
+          "kind": "human_review_receipt",
+          "subject": "example-human-operator",
+          "handoff_ref": "handoff-0001",
+          "reconciliation_ref": "reconciliation-0001",
+          "recovery_id": "carried-blocker-silently-resolved-0001",
+          "candidate": {
+            "mission_id": "mission-v03-successor-0001",
+            "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+            "objective": "Change only the demo configuration value from 0 to 1 using a conditional update.",
+            "observation_scope": [
+              "urn:example:tacp:v03:carried-blocker-silently-resolved:demo-store:configuration",
+              "urn:example:tacp:v03:carried-blocker-silently-resolved:source:evidence:conditional-update-contract",
+              "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:evidence:conditional-update-contract"
+            ],
+            "authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:authorization:operator-grant-v1",
+            "policy_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:successor:policy:demo-v1",
+            "limits": {
+              "max_review_rounds": 2,
+              "deadline_at": "2026-09-29T02:05:00Z",
+              "max_observation_age_seconds": 60,
+              "max_execution_attempts": 1,
+              "resource_budgets": [
+                {
+                  "budget_id": "work",
+                  "unit": "work_units",
+                  "limit": 20
+                }
+              ],
+              "max_dispatch_check_age_seconds": 5
+            },
+            "expected_results": [
+              {
+                "condition_id": "expected-value-one",
+                "description": "The target value equals 1."
+              }
+            ],
+            "stop_conditions": [
+              {
+                "condition_id": "stop-unexpected-change",
+                "description": "A data field other than value changed, excluding the expected revision-token update."
+              }
+            ]
+          },
+          "decision": "approve",
+          "reviewed_at": "2026-09-29T02:00:40Z",
+          "valid_until": "2026-09-29T02:01:30Z",
+          "single_use": true,
+          "revoked": false,
+          "review_summary": "I approve this exact candidate after reviewing the source review-limit closure, carried runtime-contract blocker, non-dispatch evidence, and permanent source fence. The source must remain closed. Policy permits one fresh mission cycle, not another round inside the old mission. Approval does not clear the blocker: the successor must retain it initially, then resolve it with fresh contract evidence, an assessment revision, and explicit review before execution.",
+          "issue_carryover": [
+            {
+              "issue_id": "issue-runtime-contract-unconfirmed",
+              "source_record_ref": "source-review-0002",
+              "blocks_execution": true
+            }
+          ]
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:claim:successor-0001": {
+          "kind": "single_use_recovery_claim",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "recovery_id": "carried-blocker-silently-resolved-0001",
+          "candidate_mission_id": "mission-v03-successor-0001",
+          "created_at": "2026-09-29T02:00:51Z",
+          "start_before": "2026-09-29T02:01:20Z",
+          "consumed_at": "2026-09-29T02:01:00Z",
+          "consume_count": 1,
+          "status": "consumed",
+          "successor_allowance_permanently_consumed": true,
+          "atomic_rechecks": {
+            "human_approval_unrevoked": true,
+            "policy_valid": true,
+            "source_fence_enforced": true,
+            "no_other_successor": true
+          }
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:evidence:dispatch_ledger": {
+          "kind": "dispatch_ledger",
+          "issuer_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "source_dispatch_count": 0,
+          "source_terminal": true
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:evidence:reservation_ledger": {
+          "kind": "reservation_ledger",
+          "issuer_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "source_reservation_count": 0,
+          "unresolved_reservation_count": 0
+        },
+        "urn:example:tacp:v03:carried-blocker-silently-resolved:evidence:fence_receipt": {
+          "kind": "fence_receipt",
+          "issuer_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:issuer:runtime-registry",
+          "observed_at": "2026-09-29T02:00:19Z",
+          "source_mission_id": "mission-v03-source-0001",
+          "source_closure_ref": "source-closure-0001",
+          "operation_id": "operation-v03-carried-blocker-silently-resolved-0001",
+          "installed_at": "2026-09-29T02:00:18Z",
+          "control_authorization_ref": "urn:example:tacp:v03:carried-blocker-silently-resolved:authorization:fence-control-v1",
+          "status": "enforced",
+          "permanent": true,
+          "coverage": [
+            "queued",
+            "in_flight",
+            "scheduled",
+            "replayable"
+          ],
+          "scope": "Reject every future dispatch from the source mission permanently. Only a uniquely claimed successor with its own mission-bound reservation may use the same stable operation ID."
+        }
+      },
+      "runtime_summary": {
+        "source_dispatches": 0,
+        "successor_dispatches": 1,
+        "total_dispatches": 1,
+        "successor_count": 1,
+        "claim_consume_count": 1,
+        "source_records_immutable": true,
+        "source_fence_enforced_through_successor_completion": true,
+        "carried_issue_id": "issue-runtime-contract-unconfirmed",
+        "source_issue_status": "open",
+        "successor_initial_issue_status": "open",
+        "successor_final_issue_status": "resolved",
+        "resolution_assessment_ref": "successor-assessment-0002",
+        "resolution_review_ref": "successor-review-0002"
+      },
+      "expected_error": "unresolved_blocking_issue"
+    }
+  }
+}
