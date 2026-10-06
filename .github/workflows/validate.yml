@@ -1,4 +1,4 @@
-name: Validate TACP v0.1
+name: Validate TACP v0.1-v0.3
 
 "on":
   push:
@@ -46,7 +46,107 @@ jobs:
       - name: Check validator syntax
         run: python -m py_compile scripts/validate.py
 
-      - name: Validate positive and negative examples
-        # Success means positive fixtures are accepted AND negative fixtures
-        # are rejected for their expected reasons. Unexpected acceptance fails CI.
-        run: python scripts/validate.py --examples
+      # Explicit bash enables pipefail: tee must not hide validator failures.
+      # v0.3 example mode also checks the three paired synthetic runtime vectors.
+      - name: Validate v0.1 examples
+        run: python scripts/validate.py --examples --version 0.1.0 --json | tee "$RUNNER_TEMP/tacp-0.1.0.json"
+
+      - name: Validate v0.2 examples
+        if: ${{ !cancelled() }}
+        run: python scripts/validate.py --examples --version 0.2.0 --json | tee "$RUNNER_TEMP/tacp-0.2.0.json"
+
+      - name: Validate v0.3 examples and synthetic runtime cases
+        if: ${{ !cancelled() }}
+        run: python scripts/validate.py --examples --version 0.3.0 --json | tee "$RUNNER_TEMP/tacp-0.3.0.json"
+
+      - name: Check CLI rejection and document-only scope
+        run: |
+          python - <<'PY'
+          import json
+          import subprocess
+          import sys
+          import tempfile
+          from pathlib import Path
+
+          validator = Path("scripts/validate.py").resolve()
+
+          def run_case(arguments, expected_exit, expected_code=None):
+              result = subprocess.run(
+                  [sys.executable, str(validator), *map(str, arguments), "--json"],
+                  text=True, capture_output=True, check=False,
+              )
+              if result.returncode != expected_exit:
+                  raise SystemExit(f"Unexpected exit {result.returncode}: {result.stdout}\n{result.stderr}")
+              report = json.loads(result.stdout)
+              if report["mode"] != "files" or len(report["results"]) != 1:
+                  raise SystemExit("Direct file mode must validate exactly the supplied document.")
+              row = report["results"][0]
+              if row["validation_scope"] != "document_consistency":
+                  raise SystemExit("Synthetic runtime checks leaked into direct file validation.")
+              if expected_code and expected_code not in {d["code"] for d in row["diagnostics"]}:
+                  raise SystemExit(f"Missing intended diagnostic {expected_code}: {row}")
+              if expected_exit == 0 and row["document_valid"] is not True:
+                  raise SystemExit("Expected a document-consistent input.")
+
+          # These negatives need independent external state. Their documents
+          # alone are consistent; example mode tests their mock service responses.
+          for name in ("source-edited", "hidden-recovery-chain", "duplicate-claim-consumption"):
+              run_case([f"examples/v0.3/fail/{name}.json"], 0)
+          run_case(["examples/v0.3/fail/changed-operation-id.json"], 1, "changed_operation_id")
+          run_case(["--version", "0.2.0", "examples/v0.3/pass/mission-completed.json"],
+                   1, "version_mismatch")
+          with tempfile.TemporaryDirectory() as directory:
+              path = Path(directory) / "invalid.json"
+              for text, code in (
+                  ('{"protocol_version":"9.0.0"}', "unsupported_version"),
+                  ('{"protocol_version":"0.3.0","protocol_version":"0.2.0"}', "invalid_json"),
+                  ('{"value":NaN}', "invalid_json"),
+              ):
+                  path.write_text(text, encoding="utf-8")
+                  run_case([path], 1, code)
+          print("CLI exit codes, intended diagnostics and document-only scope verified.")
+          PY
+
+      - name: Summarize validation scope and results
+        if: ${{ !cancelled() }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          lines = ["## TACP validation", "", "| Version | Matched | Total | Synthetic runtime cases |",
+                   "| --- | ---: | ---: | ---: |"]
+          failed = False
+          for version in ("0.1.0", "0.2.0", "0.3.0"):
+              path = Path(os.environ["RUNNER_TEMP"]) / f"tacp-{version}.json"
+              try:
+                  report = json.loads(path.read_text(encoding="utf-8"))
+                  rows = report["results"]
+                  runtime = [r for r in rows if r["validation_scope"] == "synthetic_runtime_fixture"]
+                  complete = (report["mode"] == "examples" and report["total"] == len(rows) > 0
+                              and report["matched"] == len(rows) and all(r["matched"] for r in rows))
+                  if version == "0.3.0":
+                      wanted = {"source-edited.json", "hidden-recovery-chain.json", "duplicate-claim-consumption.json"}
+                      complete = (complete and {Path(r["file"]).name for r in runtime} == wanted
+                                  and all(r["document_valid"] is True for r in runtime)
+                                  and all(r["expected_code"] for r in rows if r["expected"] == "reject"))
+                  else:
+                      complete = complete and not runtime
+                  failed = failed or not complete
+                  lines.append(f"| {version} | {report['matched']} | {report['total']} | {len(runtime)} |")
+              except (OSError, ValueError, KeyError, TypeError) as error:
+                  failed = True
+                  lines.append(f"| {version} | unavailable | unavailable | unavailable |")
+                  print(f"Missing or invalid report for {version}: {error}")
+          lines += ["", "Document checks establish consistency only. Synthetic runtime cases include repaired",
+                    "positive controls; they do not prove identity, evidence authenticity, fencing, revocation,",
+                    "or atomic cross-document enforcement. CLI checks have their own required step."]
+          summary = "\n".join(lines) + "\n"
+          print(summary)
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as output:
+              output.write(summary)
+          if failed:
+              raise SystemExit("Validation reports are incomplete or an expectation failed.")
+          PY
+
