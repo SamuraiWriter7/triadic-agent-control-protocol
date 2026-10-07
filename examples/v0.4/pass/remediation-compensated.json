@@ -1,0 +1,597 @@
+{
+  "protocol_version": "0.4.0",
+  "document_type": "remediation_bundle",
+  "remediation_id": "remediation-compensated-0001",
+
+  "source": {
+    "protocol_version": "0.4.0",
+    "document_type": "mission_bundle",
+    "mission_id": "mission-source-compensation-0001",
+    "records": [
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "mission",
+        "record_id": "source-mission-record-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:00Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+
+        "objective": "Set the demo balance adjustment to +100.",
+        "operation_id": "operation-source-adjustment-0001",
+        "observation_scope": [
+          "urn:example:tacp:v04:account:demo"
+        ],
+        "authorization_ref": "urn:example:tacp:v04:source:authorization:adjustment-v1",
+        "policy_ref": "urn:example:tacp:v04:policy:demo-v1",
+
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-10-07T01:10:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+
+        "expected_results": [
+          {
+            "condition_id": "balance-adjusted",
+            "description": "The demo balance adjustment increases by 100."
+          }
+        ],
+
+        "stop_conditions": [
+          {
+            "condition_id": "unexpected-account-state",
+            "description": "Stop if the target account state differs from the reviewed state."
+          }
+        ]
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "observation",
+        "record_id": "source-observation-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:01Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+
+        "phase": "pre_execution",
+        "observed_at": "2026-10-07T01:00:01Z",
+        "target_ref": "urn:example:tacp:v04:account:demo",
+        "target_state": {
+          "kind": "revision",
+          "value": "r1"
+        },
+        "sources": [],
+        "facts": [
+          "The reviewed demo account is at revision r1."
+        ],
+        "uncertainties": []
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "assessment",
+        "record_id": "source-assessment-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:02Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+
+        "revision": 1,
+        "observation_refs": [
+          "source-observation-0001"
+        ],
+
+        "action": {
+          "operation_id": "operation-source-adjustment-0001",
+          "target_ref": "urn:example:tacp:v04:account:demo",
+          "operation": "apply_adjustment",
+          "parameters": {
+            "amount": 100
+          }
+        },
+
+        "rationale": "The reviewed account state permits the bounded demo adjustment.",
+        "prerequisites": [],
+        "open_issues": [],
+        "recommendation": "ready"
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "review",
+        "record_id": "source-review-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:03Z",
+        "producer_id": "example-analyst-01",
+        "producer_role": "analyst",
+
+        "round": 1,
+        "assessment_ref": "source-assessment-0001",
+        "questions": [
+          "Is the target state current?",
+          "Is the action bounded?"
+        ],
+        "checks_performed": [],
+        "reused_observation_refs": [
+          "source-observation-0001"
+        ],
+        "new_observation_refs": [],
+        "issue_updates": [],
+        "remaining_blocking_issues": [],
+        "decision": "pass",
+        "decision_change": "initial",
+        "change_reason": "No blocking issue remains."
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "gate",
+        "record_id": "source-gate-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:04Z",
+        "producer_id": "example-gate-01",
+        "producer_role": "gate",
+
+        "assessment_ref": "source-assessment-0001",
+        "review_ref": "source-review-0001",
+
+        "action": {
+          "operation_id": "operation-source-adjustment-0001",
+          "target_ref": "urn:example:tacp:v04:account:demo",
+          "operation": "apply_adjustment",
+          "parameters": {
+            "amount": 100
+          }
+        },
+
+        "authorization_ref": "urn:example:tacp:v04:source:authorization:adjustment-v1",
+        "policy_ref": "urn:example:tacp:v04:policy:demo-v1",
+        "checked_at": "2026-10-07T01:00:04Z",
+        "valid_until": "2026-10-07T01:00:30Z",
+
+        "checks": {
+          "reference_integrity": "pass",
+          "review_passed": "pass",
+          "authorization_valid": "pass",
+          "scope_match": "pass",
+          "observation_fresh": "pass",
+          "target_state_match": "pass",
+          "budgets_available": "pass",
+          "deadline_valid": "pass",
+          "stop_conditions_clear": "pass",
+          "operation_available": "pass"
+        },
+
+        "prerequisite_results": [],
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 5,
+            "reserved": 5
+          }
+        ],
+
+        "enforcement_ref": "urn:example:tacp:v04:runtime:gate-v1",
+        "decision": "allow",
+        "reasons": [
+          "The exact reviewed action is authorized and within limits."
+        ]
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "dispatch_check",
+        "record_id": "source-dispatch-check-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:05Z",
+        "producer_id": "example-gate-01",
+        "producer_role": "gate",
+
+        "assessment_ref": "source-assessment-0001",
+        "review_ref": "source-review-0001",
+
+        "action": {
+          "operation_id": "operation-source-adjustment-0001",
+          "target_ref": "urn:example:tacp:v04:account:demo",
+          "operation": "apply_adjustment",
+          "parameters": {
+            "amount": 100
+          }
+        },
+
+        "authorization_ref": "urn:example:tacp:v04:source:authorization:adjustment-v1",
+        "policy_ref": "urn:example:tacp:v04:policy:demo-v1",
+
+        "checks": {
+          "reference_integrity": "pass",
+          "review_passed": "pass",
+          "authorization_valid": "pass",
+          "scope_match": "pass",
+          "observation_fresh": "pass",
+          "target_state_match": "pass",
+          "budgets_available": "pass",
+          "deadline_valid": "pass",
+          "stop_conditions_clear": "pass",
+          "operation_available": "pass"
+        },
+
+        "gate_ref": "source-gate-0001",
+        "checked_at": "2026-10-07T01:00:05Z",
+        "dispatch_before": "2026-10-07T01:00:10Z",
+
+        "authorization_check": {
+          "status": "active",
+          "scope_match": "pass",
+          "evidence_refs": [
+            "urn:example:tacp:v04:evidence:source-authorization-check"
+          ],
+          "valid_from": "2026-10-07T00:59:00Z",
+          "valid_until": "2026-10-07T01:10:00Z"
+        },
+
+        "target_check": {
+          "target_ref": "urn:example:tacp:v04:account:demo",
+          "basis_observation_ref": "source-observation-0001",
+          "expected_state": {
+            "kind": "revision",
+            "value": "r1"
+          },
+          "current_state": {
+            "kind": "revision",
+            "value": "r1"
+          },
+          "result": "match",
+          "evidence_refs": [
+            "urn:example:tacp:v04:evidence:source-target-check"
+          ]
+        },
+
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 6,
+            "reserved": 4
+          }
+        ],
+
+        "decision": "allow",
+        "reasons": [
+          "Final dispatch conditions remain valid."
+        ]
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "execution",
+        "record_id": "source-execution-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:07Z",
+        "producer_id": "example-executor-01",
+        "producer_role": "executor",
+
+        "gate_ref": "source-gate-0001",
+        "assessment_ref": "source-assessment-0001",
+
+        "action": {
+          "operation_id": "operation-source-adjustment-0001",
+          "target_ref": "urn:example:tacp:v04:account:demo",
+          "operation": "apply_adjustment",
+          "parameters": {
+            "amount": 100
+          }
+        },
+
+        "started_at": "2026-10-07T01:00:06Z",
+        "finished_at": "2026-10-07T01:00:07Z",
+        "attempt": 1,
+        "reservation_ref": "urn:example:tacp:v04:reservation:source-0001",
+        "outcome": "succeeded",
+        "reported_effects": [
+          "The demo balance adjustment increased by 100."
+        ],
+        "uncertainties": [],
+        "result_refs": [
+          "urn:example:tacp:v04:receipt:source-execution-0001"
+        ],
+        "dispatch_check_ref": "source-dispatch-check-0001"
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "verification",
+        "record_id": "source-verification-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:08Z",
+        "producer_id": "example-scout-01",
+        "producer_role": "scout",
+
+        "execution_ref": "source-execution-0001",
+        "observed_at": "2026-10-07T01:00:08Z",
+        "result": "confirmed",
+        "evidence_refs": [
+          "urn:example:tacp:v04:evidence:source-effect-confirmed"
+        ],
+        "reason": "The external system confirms the +100 adjustment."
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "closure",
+        "record_id": "source-closure-0001",
+        "mission_id": "mission-source-compensation-0001",
+        "created_at": "2026-10-07T01:00:09Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+
+        "status": "completed",
+        "reason_codes": [
+          "mission_completed"
+        ],
+        "basis_refs": [
+          "source-verification-0001"
+        ],
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 10
+          }
+        ],
+        "reason": "The source operation completed and its external effect was confirmed."
+      }
+    ]
+  },
+
+  "records": [
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "impact_assessment",
+      "record_id": "impact-assessment-0001",
+      "remediation_id": "remediation-compensated-0001",
+      "created_at": "2026-10-07T01:01:00Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+
+      "source_mission_ref": "source-mission-record-0001",
+      "source_closure_ref": "source-closure-0001",
+      "source_operation_id": "operation-source-adjustment-0001",
+      "source_execution_refs": [
+        "source-execution-0001"
+      ],
+
+      "effect_status": "confirmed",
+      "effect_scope": "bounded",
+
+      "evidence": [
+        {
+          "evidence_ref": "urn:example:tacp:v04:evidence:effect-audit-0001",
+          "issuer_ref": "urn:example:tacp:v04:issuer:demo-system",
+          "observed_at": "2026-10-07T01:00:30Z",
+          "kind": "effect_audit"
+        },
+        {
+          "evidence_ref": "urn:example:tacp:v04:evidence:operation-receipt-0001",
+          "issuer_ref": "urn:example:tacp:v04:issuer:demo-system",
+          "observed_at": "2026-10-07T01:00:31Z",
+          "kind": "operation_receipt"
+        }
+      ],
+
+      "uncertainties": [],
+      "assessed_at": "2026-10-07T01:00:59Z",
+      "reason": "The +100 source effect is authoritative, attributable, and bounded to the demo account."
+    },
+
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "remediation_plan",
+      "record_id": "remediation-plan-0001",
+      "remediation_id": "remediation-compensated-0001",
+      "created_at": "2026-10-07T01:01:10Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+
+      "impact_assessment_ref": "impact-assessment-0001",
+      "remediation_type": "compensate",
+
+      "source_operation_id": "operation-source-adjustment-0001",
+      "remediation_operation_id": "operation-compensating-adjustment-0001",
+      "compensates_operation_ref": "operation-source-adjustment-0001",
+
+      "objective": "Apply an independently authorized -100 compensating adjustment.",
+
+      "target_scope": [
+        "urn:example:tacp:v04:account:demo"
+      ],
+
+      "proposed_action": {
+        "operation_id": "operation-compensating-adjustment-0001",
+        "target_ref": "urn:example:tacp:v04:account:demo",
+        "operation": "apply_adjustment",
+        "parameters": {
+          "amount": -100
+        }
+      },
+
+      "authorization_ref": "urn:example:tacp:v04:remediation:authorization:compensation-v1",
+      "policy_ref": "urn:example:tacp:v04:policy:remediation-v1",
+
+      "expected_results": [
+        {
+          "condition_id": "compensating-adjustment-applied",
+          "description": "A distinct -100 compensating adjustment is recorded."
+        }
+      ],
+
+      "stop_conditions": [
+        {
+          "condition_id": "target-state-changed",
+          "description": "Stop if the current account state differs from the remediation observation."
+        }
+      ],
+
+      "limits": {
+        "max_review_rounds": 2,
+        "deadline_at": "2026-10-07T01:10:00Z",
+        "max_observation_age_seconds": 60,
+        "max_execution_attempts": 1,
+        "resource_budgets": [
+          {
+            "budget_id": "remediation-work",
+            "unit": "work_units",
+            "limit": 20
+          }
+        ],
+        "max_dispatch_check_age_seconds": 5
+      },
+
+      "reason": "The confirmed source effect should be offset by one separately authorized compensating operation."
+    },
+
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "human_review",
+      "record_id": "human-review-0001",
+      "remediation_id": "remediation-compensated-0001",
+      "created_at": "2026-10-07T01:01:20Z",
+      "producer_id": "example-human-reviewer-01",
+      "producer_role": "human",
+
+      "impact_assessment_ref": "impact-assessment-0001",
+      "remediation_plan_ref": "remediation-plan-0001",
+
+      "reviewer_ref": "urn:example:tacp:v04:human:reviewer-01",
+      "reviewer_authority_ref": "urn:example:tacp:v04:authority:remediation-reviewer-v1",
+
+      "decision": "approve",
+      "reviewed_at": "2026-10-07T01:01:19Z",
+      "valid_until": "2026-10-07T01:05:00Z",
+
+      "evidence_refs": [
+        "urn:example:tacp:v04:evidence:human-review-receipt-0001"
+      ],
+
+      "reason": "The effect is bounded and the proposed compensating action is narrowly scoped and independently authorized."
+    },
+
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "remediation_admission",
+      "record_id": "remediation-admission-0001",
+      "remediation_id": "remediation-compensated-0001",
+      "created_at": "2026-10-07T01:01:30Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+
+      "impact_assessment_ref": "impact-assessment-0001",
+      "remediation_plan_ref": "remediation-plan-0001",
+      "human_review_ref": "human-review-0001",
+
+      "checked_at": "2026-10-07T01:01:29Z",
+
+      "checks": {
+        "reference_integrity": "pass",
+        "source_terminal": "pass",
+        "effect_established": "pass",
+        "effect_scope_bounded": "pass",
+        "remediation_policy_valid": "pass",
+        "remediation_authorization_valid": "pass",
+        "human_approval_valid": "pass",
+        "action_identity_new": "pass",
+        "causal_link_valid": "pass",
+        "target_scope_valid": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass",
+        "duplicate_remediation_absent": "pass"
+      },
+
+      "decision": "allow",
+
+      "claim_ref": "urn:example:tacp:v04:claim:remediation-compensated-0001",
+      "start_before": "2026-10-07T01:03:00Z",
+
+      "resource_usage": [
+        {
+          "budget_id": "remediation-work",
+          "used": 4,
+          "reserved": 6
+        }
+      ],
+
+      "reason_codes": [
+        "remediation_admitted"
+      ],
+
+      "reason": "All bounded remediation admission checks passed."
+    }
+  ],
+
+  "remediation_mission": {
+    "protocol_version": "0.4.0",
+    "document_type": "mission_bundle",
+    "mission_id": "mission-remediation-compensation-0001",
+    "remediation_ref": "remediation-compensated-0001",
+
+    "records": [
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "mission",
+        "record_id": "remediation-mission-record-0001",
+        "mission_id": "mission-remediation-compensation-0001",
+        "created_at": "2026-10-07T01:01:40Z",
+
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+
+        "objective": "Apply an independently authorized -100 compensating adjustment.",
+        "operation_id": "operation-compensating-adjustment-0001",
+
+        "observation_scope": [
+          "urn:example:tacp:v04:account:demo"
+        ],
+
+        "authorization_ref": "urn:example:tacp:v04:remediation:authorization:compensation-v1",
+        "policy_ref": "urn:example:tacp:v04:policy:remediation-v1",
+
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-10-07T01:10:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "remediation-work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+
+        "expected_results": [
+          {
+            "condition_id": "compensating-adjustment-applied",
+            "description": "A distinct -100 compensating adjustment is recorded."
+          }
+        ],
+
+        "stop_conditions": [
+          {
+            "condition_id": "target-state-changed",
+            "description": "Stop if the current account state differs from the remediation observation."
+          }
+        ]
+      }
+    ]
+  }
+}
