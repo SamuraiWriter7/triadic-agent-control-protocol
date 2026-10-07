@@ -1,0 +1,991 @@
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/tacp/schemas/tacp-v0.4.schema.json",
+  "title": "TACP v0.4.0 Mission and Remediation Bundles",
+  "description": "Structural validation for TACP v0.4.0. Accepts standalone mission bundles or bounded human-reviewed remediation bundles. Document conformance does not prove human identity, authority, evidence authenticity, external effect truth, runtime claim uniqueness, or cross-process enforcement.",
+  "$comment": "Strict JSON parsing is REQUIRED: reject duplicate object members and non-finite numbers. Date-time format assertion SHOULD be enabled. Separate semantic validation is REQUIRED for inherited mission semantics, chronological ordering, exact action binding, source immutability, effect interpretation, source/remediation operation inequality, causal linkage, authorization independence, approval validity, duplicate-remediation protection, claim consumption, and no-remediation-chain enforcement.",
+
+  "oneOf": [
+    {
+      "$ref": "#/$defs/mission_bundle"
+    },
+    {
+      "$ref": "#/$defs/remediation_bundle"
+    }
+  ],
+
+  "$defs": {
+    "nonempty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "reference": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Opaque internal or external reference. Authenticity and resolution may require semantic or runtime validation."
+    },
+
+    "utc_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reference"
+      },
+      "uniqueItems": true
+    },
+
+    "nonempty_references": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reference"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+
+    "extensions": {
+      "type": "object",
+      "description": "Optional non-authoritative extension data."
+    },
+
+    "check_result": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "unknown"
+      ]
+    },
+
+    "condition": {
+      "type": "object",
+      "properties": {
+        "condition_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "description": {
+          "$ref": "#/$defs/nonempty_string"
+        }
+      },
+      "required": [
+        "condition_id",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+
+    "resource_budget": {
+      "type": "object",
+      "properties": {
+        "budget_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "unit": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "limit": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "budget_id",
+        "unit",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+
+    "resource_usage": {
+      "type": "object",
+      "properties": {
+        "budget_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "used": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reserved": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "budget_id",
+        "used",
+        "reserved"
+      ],
+      "additionalProperties": false
+    },
+
+    "action": {
+      "type": "object",
+      "properties": {
+        "operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "target_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "operation": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "parameters": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "operation_id",
+        "target_ref",
+        "operation",
+        "parameters"
+      ],
+      "additionalProperties": false
+    },
+
+    "mission_limits": {
+      "type": "object",
+      "properties": {
+        "max_review_rounds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deadline_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "max_observation_age_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_execution_attempts": {
+          "type": "integer",
+          "const": 1
+        },
+        "resource_budgets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource_budget"
+          },
+          "minItems": 1
+        },
+        "max_dispatch_check_age_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "max_review_rounds",
+        "deadline_at",
+        "max_observation_age_seconds",
+        "max_execution_attempts",
+        "resource_budgets",
+        "max_dispatch_check_age_seconds"
+      ],
+      "additionalProperties": false
+    },
+
+    "mission_record": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.4.0"
+        },
+        "record_type": {
+          "type": "string",
+          "enum": [
+            "mission",
+            "observation",
+            "assessment",
+            "review",
+            "gate",
+            "dispatch_check",
+            "execution",
+            "verification",
+            "closure"
+          ]
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "mission_id",
+        "created_at"
+      ],
+      "unevaluatedProperties": true,
+      "$comment": "Inherited mission-record field structure and semantics MUST be validated by the v0.4 semantic validator. This initial schema intentionally avoids duplicating the full v0.3 mission schema."
+    },
+
+    "mission_bundle": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.4.0"
+        },
+        "document_type": {
+          "const": "mission_bundle"
+        },
+        "mission_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mission_record"
+          },
+          "minItems": 1
+        },
+        "remediation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "document_type",
+        "mission_id",
+        "records"
+      ],
+      "additionalProperties": false,
+      "$comment": "Standalone missions MUST omit remediation_ref. Embedded remediation missions MUST contain it. This distinction requires enclosing-context semantic validation."
+    },
+
+    "impact_evidence": {
+      "type": "object",
+      "properties": {
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "issuer_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "observed_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "operation_receipt",
+            "effect_audit",
+            "target_snapshot",
+            "downstream_receipt",
+            "reservation_ledger",
+            "fence_receipt",
+            "human_report",
+            "lookup_failure"
+          ]
+        }
+      },
+      "required": [
+        "evidence_ref",
+        "issuer_ref",
+        "observed_at",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+
+    "impact_assessment": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.4.0"
+        },
+        "record_type": {
+          "const": "impact_assessment"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "remediation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "analyst"
+        },
+        "source_mission_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "source_closure_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "source_operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "source_execution_refs": {
+          "$ref": "#/$defs/references"
+        },
+        "effect_status": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "probable",
+            "unresolved"
+          ]
+        },
+        "effect_scope": {
+          "type": "string",
+          "enum": [
+            "bounded",
+            "partially_bounded",
+            "unresolved"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/impact_evidence"
+          },
+          "minItems": 1
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonempty_string"
+          },
+          "uniqueItems": true
+        },
+        "assessed_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "remediation_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "source_mission_ref",
+        "source_closure_ref",
+        "source_operation_id",
+        "source_execution_refs",
+        "effect_status",
+        "effect_scope",
+        "evidence",
+        "uncertainties",
+        "assessed_at",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "remediation_plan": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.4.0"
+        },
+        "record_type": {
+          "const": "remediation_plan"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "remediation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "controller"
+        },
+        "impact_assessment_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "remediation_type": {
+          "type": "string",
+          "enum": [
+            "compensate",
+            "contain",
+            "correct",
+            "notify"
+          ]
+        },
+        "source_operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "remediation_operation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "compensates_operation_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "objective": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "target_scope": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reference"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "proposed_action": {
+          "$ref": "#/$defs/action"
+        },
+        "authorization_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "expected_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 1
+        },
+        "stop_conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "minItems": 1
+        },
+        "limits": {
+          "$ref": "#/$defs/mission_limits"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "remediation_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "impact_assessment_ref",
+        "remediation_type",
+        "source_operation_id",
+        "remediation_operation_id",
+        "compensates_operation_ref",
+        "objective",
+        "target_scope",
+        "proposed_action",
+        "authorization_ref",
+        "policy_ref",
+        "expected_results",
+        "stop_conditions",
+        "limits",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "human_review": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.4.0"
+        },
+        "record_type": {
+          "const": "human_review"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "remediation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "human"
+        },
+        "impact_assessment_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "remediation_plan_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "reviewer_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "reviewer_authority_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "approve",
+            "hold",
+            "reject"
+          ]
+        },
+        "reviewed_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "valid_until": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "evidence_refs": {
+          "$ref": "#/$defs/nonempty_references"
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "remediation_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "impact_assessment_ref",
+        "remediation_plan_ref",
+        "reviewer_ref",
+        "reviewer_authority_ref",
+        "decision",
+        "reviewed_at",
+        "valid_until",
+        "evidence_refs",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "remediation_checks": {
+      "type": "object",
+      "properties": {
+        "reference_integrity": {
+          "$ref": "#/$defs/check_result"
+        },
+        "source_terminal": {
+          "$ref": "#/$defs/check_result"
+        },
+        "effect_established": {
+          "$ref": "#/$defs/check_result"
+        },
+        "effect_scope_bounded": {
+          "$ref": "#/$defs/check_result"
+        },
+        "remediation_policy_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "remediation_authorization_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "human_approval_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "action_identity_new": {
+          "$ref": "#/$defs/check_result"
+        },
+        "causal_link_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "target_scope_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "budgets_available": {
+          "$ref": "#/$defs/check_result"
+        },
+        "deadline_valid": {
+          "$ref": "#/$defs/check_result"
+        },
+        "duplicate_remediation_absent": {
+          "$ref": "#/$defs/check_result"
+        }
+      },
+      "required": [
+        "reference_integrity",
+        "source_terminal",
+        "effect_established",
+        "effect_scope_bounded",
+        "remediation_policy_valid",
+        "remediation_authorization_valid",
+        "human_approval_valid",
+        "action_identity_new",
+        "causal_link_valid",
+        "target_scope_valid",
+        "budgets_available",
+        "deadline_valid",
+        "duplicate_remediation_absent"
+      ],
+      "additionalProperties": false
+    },
+
+    "remediation_admission": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.4.0"
+        },
+        "record_type": {
+          "const": "remediation_admission"
+        },
+        "record_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "remediation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "created_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "producer_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "producer_role": {
+          "const": "gate"
+        },
+        "impact_assessment_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "remediation_plan_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "human_review_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "checked_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "checks": {
+          "$ref": "#/$defs/remediation_checks"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "claim_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "start_before": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "resource_usage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource_usage"
+          },
+          "minItems": 1
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "remediation_admitted",
+              "reference_invalid",
+              "source_ineligible",
+              "effect_unconfirmed",
+              "effect_scope_unresolved",
+              "remediation_policy_invalid",
+              "remediation_authorization_invalid",
+              "human_approval_invalid",
+              "operation_identity_reused",
+              "causal_link_invalid",
+              "target_scope_invalid",
+              "resource_limit_reached",
+              "deadline_reached",
+              "duplicate_remediation"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "reason": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "remediation_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "impact_assessment_ref",
+        "remediation_plan_ref",
+        "human_review_ref",
+        "checked_at",
+        "checks",
+        "decision",
+        "resource_usage",
+        "reason_codes",
+        "reason"
+      ],
+      "additionalProperties": false,
+
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "allow"
+              }
+            },
+            "required": [
+              "decision"
+            ]
+          },
+          "then": {
+            "required": [
+              "claim_ref",
+              "start_before"
+            ],
+            "properties": {
+              "checks": {
+                "properties": {
+                  "reference_integrity": {
+                    "const": "pass"
+                  },
+                  "source_terminal": {
+                    "const": "pass"
+                  },
+                  "effect_established": {
+                    "const": "pass"
+                  },
+                  "effect_scope_bounded": {
+                    "const": "pass"
+                  },
+                  "remediation_policy_valid": {
+                    "const": "pass"
+                  },
+                  "remediation_authorization_valid": {
+                    "const": "pass"
+                  },
+                  "human_approval_valid": {
+                    "const": "pass"
+                  },
+                  "action_identity_new": {
+                    "const": "pass"
+                  },
+                  "causal_link_valid": {
+                    "const": "pass"
+                  },
+                  "target_scope_valid": {
+                    "const": "pass"
+                  },
+                  "budgets_available": {
+                    "const": "pass"
+                  },
+                  "deadline_valid": {
+                    "const": "pass"
+                  },
+                  "duplicate_remediation_absent": {
+                    "const": "pass"
+                  }
+                }
+              },
+              "reason_codes": {
+                "prefixItems": [
+                  {
+                    "const": "remediation_admitted"
+                  }
+                ],
+                "minItems": 1,
+                "maxItems": 1
+              }
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "claim_ref"
+                  ]
+                },
+                {
+                  "required": [
+                    "start_before"
+                  ]
+                }
+              ]
+            },
+            "properties": {
+              "reason_codes": {
+                "not": {
+                  "contains": {
+                    "const": "remediation_admitted"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+
+    "remediation_bundle": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": "0.4.0"
+        },
+        "document_type": {
+          "const": "remediation_bundle"
+        },
+        "remediation_id": {
+          "$ref": "#/$defs/nonempty_string"
+        },
+        "source": {
+          "$ref": "#/$defs/mission_bundle"
+        },
+        "records": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/impact_assessment"
+            },
+            {
+              "$ref": "#/$defs/remediation_plan"
+            },
+            {
+              "$ref": "#/$defs/human_review"
+            },
+            {
+              "$ref": "#/$defs/remediation_admission"
+            }
+          ],
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "remediation_mission": {
+          "$ref": "#/$defs/mission_bundle"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "document_type",
+        "remediation_id",
+        "source",
+        "records"
+      ],
+      "additionalProperties": false,
+
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "decision": {
+                        "const": "deny"
+                      }
+                    },
+                    "required": [
+                      "decision"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "remediation_mission"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "remediation_mission"
+            ]
+          },
+          "then": {
+            "properties": {
+              "records": {
+                "prefixItems": [
+                  {},
+                  {},
+                  {},
+                  {
+                    "properties": {
+                      "decision": {
+                        "const": "allow"
+                      }
+                    },
+                    "required": [
+                      "decision"
+                    ]
+                  }
+                ]
+              },
+              "remediation_mission": {
+                "required": [
+                  "remediation_ref"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
