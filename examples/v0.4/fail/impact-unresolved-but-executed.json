@@ -1,0 +1,426 @@
+{
+  "protocol_version": "0.4.0",
+  "document_type": "remediation_bundle",
+  "remediation_id": "remediation-impact-unresolved-0001",
+
+  "source": {
+    "protocol_version": "0.4.0",
+    "document_type": "mission_bundle",
+    "mission_id": "mission-source-impact-unresolved-0001",
+
+    "records": [
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "mission",
+        "record_id": "source-mission-record-0001",
+        "mission_id": "mission-source-impact-unresolved-0001",
+        "created_at": "2026-10-07T01:00:00Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+
+        "objective": "Apply the original +100 demo adjustment.",
+        "operation_id": "operation-source-adjustment-0001",
+
+        "observation_scope": [
+          "urn:example:tacp:v04:account:demo"
+        ],
+
+        "authorization_ref": "urn:example:tacp:v04:source:authorization:adjustment-v1",
+        "policy_ref": "urn:example:tacp:v04:policy:demo-v1",
+
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-10-07T01:10:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+
+        "expected_results": [
+          {
+            "condition_id": "source-adjustment-applied",
+            "description": "The original +100 adjustment is applied."
+          }
+        ],
+
+        "stop_conditions": [
+          {
+            "condition_id": "unexpected-source-state",
+            "description": "Stop if the source target state differs from the reviewed state."
+          }
+        ]
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "execution",
+        "record_id": "source-execution-0001",
+        "mission_id": "mission-source-impact-unresolved-0001",
+        "created_at": "2026-10-07T01:00:06Z",
+        "producer_id": "example-executor-01",
+        "producer_role": "executor",
+
+        "gate_ref": "source-gate-0001",
+        "assessment_ref": "source-assessment-0001",
+
+        "action": {
+          "operation_id": "operation-source-adjustment-0001",
+          "target_ref": "urn:example:tacp:v04:account:demo",
+          "operation": "apply_adjustment",
+          "parameters": {
+            "amount": 100
+          }
+        },
+
+        "started_at": "2026-10-07T01:00:05Z",
+        "finished_at": "2026-10-07T01:00:06Z",
+        "attempt": 1,
+
+        "reservation_ref": "urn:example:tacp:v04:reservation:source-0001",
+        "outcome": "unknown",
+
+        "reported_effects": [],
+
+        "uncertainties": [
+          "The source request was dispatched, but the system cannot determine the complete effect scope."
+        ],
+
+        "result_refs": [
+          "urn:example:tacp:v04:receipt:source-execution-0001"
+        ],
+
+        "dispatch_check_ref": "source-dispatch-check-0001"
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "closure",
+        "record_id": "source-closure-0001",
+        "mission_id": "mission-source-impact-unresolved-0001",
+        "created_at": "2026-10-07T01:00:08Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+
+        "status": "stopped",
+
+        "reason_codes": [
+          "external_effect_unknown"
+        ],
+
+        "basis_refs": [
+          "source-execution-0001"
+        ],
+
+        "resource_usage": [
+          {
+            "budget_id": "work",
+            "used": 10
+          }
+        ],
+
+        "reason": "The source mission stopped because the complete external effect could not be established."
+      }
+    ]
+  },
+
+  "records": [
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "impact_assessment",
+      "record_id": "impact-assessment-0001",
+      "remediation_id": "remediation-impact-unresolved-0001",
+      "created_at": "2026-10-07T01:01:00Z",
+      "producer_id": "example-analyst-01",
+      "producer_role": "analyst",
+
+      "source_mission_ref": "source-mission-record-0001",
+      "source_closure_ref": "source-closure-0001",
+      "source_operation_id": "operation-source-adjustment-0001",
+
+      "source_execution_refs": [
+        "source-execution-0001"
+      ],
+
+      "effect_status": "unresolved",
+      "effect_scope": "unresolved",
+
+      "evidence": [
+        {
+          "evidence_ref": "urn:example:tacp:v04:evidence:lookup-failure-0001",
+          "issuer_ref": "urn:example:tacp:v04:issuer:demo-system",
+          "observed_at": "2026-10-07T01:00:30Z",
+          "kind": "lookup_failure"
+        },
+        {
+          "evidence_ref": "urn:example:tacp:v04:evidence:partial-target-snapshot-0001",
+          "issuer_ref": "urn:example:tacp:v04:issuer:demo-system",
+          "observed_at": "2026-10-07T01:00:31Z",
+          "kind": "target_snapshot"
+        }
+      ],
+
+      "uncertainties": [
+        "The target snapshot does not establish whether the source operation affected downstream systems.",
+        "The operation outcome cannot be attributed conclusively.",
+        "Additional delayed effects may still exist."
+      ],
+
+      "assessed_at": "2026-10-07T01:00:59Z",
+
+      "reason": "The effect and its scope remain unresolved."
+    },
+
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "remediation_plan",
+      "record_id": "remediation-plan-0001",
+      "remediation_id": "remediation-impact-unresolved-0001",
+      "created_at": "2026-10-07T01:01:10Z",
+      "producer_id": "example-controller-01",
+      "producer_role": "controller",
+
+      "impact_assessment_ref": "impact-assessment-0001",
+      "remediation_type": "compensate",
+
+      "source_operation_id": "operation-source-adjustment-0001",
+      "remediation_operation_id": "operation-compensating-adjustment-0001",
+      "compensates_operation_ref": "operation-source-adjustment-0001",
+
+      "objective": "Apply a -100 compensating adjustment despite unresolved impact scope.",
+
+      "target_scope": [
+        "urn:example:tacp:v04:account:demo"
+      ],
+
+      "proposed_action": {
+        "operation_id": "operation-compensating-adjustment-0001",
+        "target_ref": "urn:example:tacp:v04:account:demo",
+        "operation": "apply_adjustment",
+        "parameters": {
+          "amount": -100
+        }
+      },
+
+      "authorization_ref": "urn:example:tacp:v04:remediation:authorization:compensation-v1",
+      "policy_ref": "urn:example:tacp:v04:policy:remediation-v1",
+
+      "expected_results": [
+        {
+          "condition_id": "compensation-recorded",
+          "description": "A -100 adjustment is recorded."
+        }
+      ],
+
+      "stop_conditions": [
+        {
+          "condition_id": "unexpected-remediation-state",
+          "description": "Stop if the target differs from the reviewed remediation state."
+        }
+      ],
+
+      "limits": {
+        "max_review_rounds": 2,
+        "deadline_at": "2026-10-07T01:10:00Z",
+        "max_observation_age_seconds": 60,
+        "max_execution_attempts": 1,
+        "resource_budgets": [
+          {
+            "budget_id": "remediation-work",
+            "unit": "work_units",
+            "limit": 20
+          }
+        ],
+        "max_dispatch_check_age_seconds": 5
+      },
+
+      "reason": "INVALID FIXTURE: state-changing compensation is proposed while the source effect scope remains unresolved."
+    },
+
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "human_review",
+      "record_id": "human-review-0001",
+      "remediation_id": "remediation-impact-unresolved-0001",
+      "created_at": "2026-10-07T01:01:20Z",
+      "producer_id": "example-human-reviewer-01",
+      "producer_role": "human",
+
+      "impact_assessment_ref": "impact-assessment-0001",
+      "remediation_plan_ref": "remediation-plan-0001",
+
+      "reviewer_ref": "urn:example:tacp:v04:human:reviewer-01",
+      "reviewer_authority_ref": "urn:example:tacp:v04:authority:remediation-reviewer-v1",
+
+      "decision": "approve",
+      "reviewed_at": "2026-10-07T01:01:19Z",
+      "valid_until": "2026-10-07T01:05:00Z",
+
+      "evidence_refs": [
+        "urn:example:tacp:v04:evidence:human-review-receipt-0001"
+      ],
+
+      "reason": "INVALID FIXTURE: approval was granted despite unresolved effect scope."
+    },
+
+    {
+      "protocol_version": "0.4.0",
+      "record_type": "remediation_admission",
+      "record_id": "remediation-admission-0001",
+      "remediation_id": "remediation-impact-unresolved-0001",
+      "created_at": "2026-10-07T01:01:30Z",
+      "producer_id": "example-gate-01",
+      "producer_role": "gate",
+
+      "impact_assessment_ref": "impact-assessment-0001",
+      "remediation_plan_ref": "remediation-plan-0001",
+      "human_review_ref": "human-review-0001",
+
+      "checked_at": "2026-10-07T01:01:29Z",
+
+      "checks": {
+        "reference_integrity": "pass",
+        "source_terminal": "pass",
+        "effect_established": "pass",
+
+        "effect_scope_bounded": "pass",
+
+        "remediation_policy_valid": "pass",
+        "remediation_authorization_valid": "pass",
+        "human_approval_valid": "pass",
+        "action_identity_new": "pass",
+        "causal_link_valid": "pass",
+        "target_scope_valid": "pass",
+        "budgets_available": "pass",
+        "deadline_valid": "pass",
+        "duplicate_remediation_absent": "pass"
+      },
+
+      "decision": "allow",
+
+      "claim_ref": "urn:example:tacp:v04:claim:impact-unresolved-0001",
+      "start_before": "2026-10-07T01:03:00Z",
+
+      "resource_usage": [
+        {
+          "budget_id": "remediation-work",
+          "used": 4,
+          "reserved": 6
+        }
+      ],
+
+      "reason_codes": [
+        "remediation_admitted"
+      ],
+
+      "reason": "INVALID FIXTURE: admission incorrectly treats unresolved impact scope as bounded."
+    }
+  ],
+
+  "remediation_mission": {
+    "protocol_version": "0.4.0",
+    "document_type": "mission_bundle",
+    "mission_id": "mission-remediation-impact-unresolved-0001",
+    "remediation_ref": "remediation-impact-unresolved-0001",
+
+    "records": [
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "mission",
+        "record_id": "remediation-mission-record-0001",
+        "mission_id": "mission-remediation-impact-unresolved-0001",
+        "created_at": "2026-10-07T01:01:40Z",
+        "producer_id": "example-controller-01",
+        "producer_role": "controller",
+
+        "objective": "Apply a -100 compensating adjustment despite unresolved impact scope.",
+        "operation_id": "operation-compensating-adjustment-0001",
+
+        "observation_scope": [
+          "urn:example:tacp:v04:account:demo"
+        ],
+
+        "authorization_ref": "urn:example:tacp:v04:remediation:authorization:compensation-v1",
+        "policy_ref": "urn:example:tacp:v04:policy:remediation-v1",
+
+        "limits": {
+          "max_review_rounds": 2,
+          "deadline_at": "2026-10-07T01:10:00Z",
+          "max_observation_age_seconds": 60,
+          "max_execution_attempts": 1,
+          "resource_budgets": [
+            {
+              "budget_id": "remediation-work",
+              "unit": "work_units",
+              "limit": 20
+            }
+          ],
+          "max_dispatch_check_age_seconds": 5
+        },
+
+        "expected_results": [
+          {
+            "condition_id": "compensation-recorded",
+            "description": "A -100 adjustment is recorded."
+          }
+        ],
+
+        "stop_conditions": [
+          {
+            "condition_id": "unexpected-remediation-state",
+            "description": "Stop if the target differs from the reviewed remediation state."
+          }
+        ]
+      },
+
+      {
+        "protocol_version": "0.4.0",
+        "record_type": "execution",
+        "record_id": "remediation-execution-0001",
+        "mission_id": "mission-remediation-impact-unresolved-0001",
+        "created_at": "2026-10-07T01:01:50Z",
+        "producer_id": "example-executor-01",
+        "producer_role": "executor",
+
+        "gate_ref": "remediation-gate-0001",
+        "assessment_ref": "remediation-assessment-0001",
+
+        "action": {
+          "operation_id": "operation-compensating-adjustment-0001",
+          "target_ref": "urn:example:tacp:v04:account:demo",
+          "operation": "apply_adjustment",
+          "parameters": {
+            "amount": -100
+          }
+        },
+
+        "started_at": "2026-10-07T01:01:49Z",
+        "finished_at": "2026-10-07T01:01:50Z",
+        "attempt": 1,
+
+        "reservation_ref": "urn:example:tacp:v04:reservation:remediation-impact-unresolved-0001",
+        "outcome": "succeeded",
+
+        "reported_effects": [
+          "The -100 compensating adjustment was applied."
+        ],
+
+        "uncertainties": [
+          "The original source impact remains unresolved."
+        ],
+
+        "result_refs": [
+          "urn:example:tacp:v04:receipt:remediation-impact-unresolved-0001"
+        ],
+
+        "dispatch_check_ref": "remediation-dispatch-check-0001"
+      }
+    ]
+  }
+}
