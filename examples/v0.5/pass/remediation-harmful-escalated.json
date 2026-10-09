@@ -1,0 +1,96 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T01:50:00Z",
+    "observation_scope": [
+      "target://configuration/service-c"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-remediation-harmful-001",
+      "outcome_id": "outcome-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T01:35:00Z",
+      "observed_at": "2026-10-09T01:34:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-c"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-c/post-remediation-001",
+        "evidence://audit/service-c/post-remediation-001"
+      ],
+      "observed_effects": [
+        "The original unintended configuration value is no longer present.",
+        "A newly introduced configuration conflict is now active and affects service availability."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh post-remediation evidence shows that the original condition changed but a new adverse effect attributable to the remediation operation has appeared."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-remediation-harmful-001",
+      "outcome_id": "outcome-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T01:36:00Z",
+      "evaluated_at": "2026-10-09T01:35:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-remediation-harmful-001"
+      ],
+      "result": "confirmed_harmful",
+      "remaining_effects": [],
+      "new_effects": [
+        "A configuration conflict introduced by the remediation operation is affecting service availability."
+      ],
+      "uncertainties": [],
+      "reason": "Independent post-remediation evidence establishes a new adverse effect caused by the remediation operation."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-remediation-harmful-001",
+      "outcome_id": "outcome-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T01:37:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-remediation-harmful-001",
+      "status": "escalated",
+      "reason_codes": [
+        "harmful_remediation"
+      ],
+      "basis_refs": [
+        "verification-remediation-harmful-001",
+        "observation-remediation-harmful-001"
+      ],
+      "escalation_required": true,
+      "escalation_scope": [
+        "Review the newly introduced adverse effect and determine whether a separately authorized external incident-response action is required."
+      ],
+      "prohibited_automatic_actions": [
+        "repeat_source_operation",
+        "repeat_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority"
+      ],
+      "reason": "The remediation path terminates as escalated because independent verification established a new adverse effect. No automatic follow-on correction is authorized by this bundle."
+    }
+  ]
+}
