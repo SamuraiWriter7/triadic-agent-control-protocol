@@ -1,0 +1,131 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-second-remediation-001",
+  "escalation_ref": "closure-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T06:30:00Z",
+    "permitted_receiver_refs": [
+      "receiver://human/incident-commander-01"
+    ],
+    "max_delivery_observation_count": 2,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-second-remediation-001",
+      "handoff_id": "handoff-second-remediation-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:00:00Z",
+      "producer_id": "controller://tacp/controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "requested_scope": [
+        "Review escalated remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "reason_codes": [
+        "remediation_verification_failed"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-001",
+        "verification-remediation-harmful-001"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation-policy-01",
+      "deadline": "2026-10-09T06:30:00Z",
+      "reason": "Escalated remediation requires responsibility transfer to an independently governed human authority."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-second-remediation-001",
+      "handoff_id": "handoff-second-remediation-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:05:00Z",
+      "request_ref": "handoff-request-second-remediation-001",
+      "result": "accepted",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_id": "incident-commander-01",
+      "receiver_type": "human",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review escalated remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "accepted_at": "2026-10-09T06:04:30Z",
+      "acceptance_evidence_refs": [
+        "receipt://handoff-acceptance/second-remediation-001"
+      ],
+      "remaining_constraints": [
+        "Acceptance transfers review responsibility only",
+        "No execution authority is granted by this handoff",
+        "Original source and remediation operations remain stopped"
+      ],
+      "disposition_evidence_refs": [
+        "receipt://handoff-acceptance/second-remediation-001",
+        "registry://authority/incident-command-duty-01"
+      ],
+      "reason": "Receiver explicitly accepted responsibility for review under independent authority."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-second-remediation-001",
+      "handoff_id": "handoff-second-remediation-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:06:00Z",
+      "producer_id": "controller://tacp/controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-second-remediation-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review escalated remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "basis_refs": [
+        "handoff-request-second-remediation-001",
+        "handoff-disposition-second-remediation-001",
+        "receipt://handoff-acceptance/second-remediation-001"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Responsibility was transferred, and the original TACP path must remain stopped."
+    }
+  ],
+  "extensions": {
+    "synthetic_runtime_case": true,
+    "runtime_events": [
+      {
+        "event_type": "remediation_operation_created",
+        "event_id": "runtime-event-second-remediation-001",
+        "created_at": "2026-10-09T06:07:00Z",
+        "operation_id": "operation-remediation-004",
+        "parent_remediation_operation_id": "operation-remediation-003",
+        "created_by": "executor://tacp/executor-01",
+        "authority_ref": "authority://tacp/original-executor-01",
+        "reason": "A second remediation operation was autonomously created after responsibility transfer."
+      }
+    ],
+    "expected_failure": "second_remediation_created_after_handoff"
+  }
+}
