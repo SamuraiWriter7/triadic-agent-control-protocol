@@ -1,0 +1,120 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-timeout-001",
+  "escalation_ref": "closure-remediation-escalated-005",
+  "remediation_ref": "remediation-005",
+  "remediation_operation_id": "operation-remediation-005",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T05:10:00Z",
+    "permitted_receiver_refs": [
+      "receiver://incident-response/team-c"
+    ],
+    "max_delivery_observation_count": 2,
+    "evidence_retrieval_budget": 4,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-timeout-001",
+      "handoff_id": "handoff-timeout-001",
+      "escalation_ref": "closure-remediation-escalated-005",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T04:55:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://incident-response/team-c",
+      "requested_scope": [
+        "Review the escalated remediation outcome and determine whether an independently authorized external response is required."
+      ],
+      "reason_codes": [
+        "unresolved_remediation_outcome"
+      ],
+      "basis_refs": [
+        "closure-remediation-escalated-005",
+        "verification-remediation-005"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-policy-01",
+      "deadline": "2026-10-09T05:10:00Z",
+      "reason": "The autonomous remediation path has terminated and responsibility must be transferred, but only by explicit receiver acceptance within the bounded handoff window."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "delivery-timeout-001",
+      "handoff_id": "handoff-timeout-001",
+      "escalation_ref": "closure-remediation-escalated-005",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T04:56:00Z",
+      "observed_at": "2026-10-09T04:55:45Z",
+      "producer_id": "transport-observer-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://incident-response/team-c",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence://handoff-transport/handoff-timeout-001/delivered"
+      ],
+      "uncertainties": [
+        "Delivery does not establish responsibility acceptance."
+      ],
+      "reason": "The handoff request reached the declared receiver channel, but no acceptance receipt was produced."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "disposition-timeout-001",
+      "handoff_id": "handoff-timeout-001",
+      "escalation_ref": "closure-remediation-escalated-005",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T05:10:01Z",
+      "request_ref": "handoff-request-timeout-001",
+      "result": "timeout",
+      "receiver_ref": "receiver://incident-response/team-c",
+      "accepted_scope": [],
+      "acceptance_evidence_refs": [],
+      "remaining_constraints": [
+        "No authoritative acceptance receipt was received before the handoff deadline."
+      ],
+      "disposition_evidence_refs": [
+        "evidence://handoff-clock/handoff-timeout-001/deadline-expired",
+        "evidence://handoff-transport/handoff-timeout-001/no-acceptance-receipt"
+      ],
+      "reason": "The bounded handoff window expired without a valid acceptance or rejection receipt. Timeout is not implicit acceptance."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "closure-timeout-001",
+      "handoff_id": "handoff-timeout-001",
+      "escalation_ref": "closure-remediation-escalated-005",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T05:10:02Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "disposition-timeout-001",
+      "status": "not_transferred",
+      "responsibility_transferred": false,
+      "basis_refs": [
+        "handoff-request-timeout-001",
+        "delivery-timeout-001",
+        "disposition-timeout-001"
+      ],
+      "remaining_responsibility_state": "handoff_unconfirmed",
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Responsibility was not transferred because the receiver did not explicitly accept before the deadline. The original autonomous TACP path remains stopped."
+    }
+  ]
+}
