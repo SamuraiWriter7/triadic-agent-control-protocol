@@ -1,4 +1,4 @@
-name: Validate TACP v0.1-v0.5
+name: Validate TACP v0.1-v0.6
 
 on:
   push:
@@ -51,6 +51,8 @@ jobs:
           python -m py_compile scripts/validate_legacy.py
           python -m py_compile scripts/validate_v05.py
           python -m py_compile scripts/validate_v05_examples.py
+          python -m py_compile scripts/validate_v06.py
+          python -m py_compile scripts/validate_v06_examples.py
 
       - name: Validate v0.1 examples
         run: |
@@ -98,6 +100,14 @@ jobs:
           python scripts/validate_v05_examples.py \
             --json \
             | tee "$RUNNER_TEMP/tacp-0.5.0.json"
+
+      - name: Validate v0.6 examples and synthetic runtime cases
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          python scripts/validate_v06_examples.py \
+            --json \
+            | tee "$RUNNER_TEMP/tacp-0.6.0.json"
 
       - name: Check CLI rejection and document-only scope
         if: ${{ !cancelled() }}
@@ -218,6 +228,7 @@ jobs:
               "0.3.0",
               "0.4.0",
               "0.5.0",
+              "0.6.0",
           )
 
           expected_runtime_fixtures = {
@@ -234,6 +245,11 @@ jobs:
                   "authority-expanded-after-failure.json",
                   "not-dispatched-with-execution-evidence.json",
                   "new-effect-silently-omitted.json",
+              },
+              "0.6.0": {
+                  "second-remediation-created-after-handoff.json",
+                  "authority-expanded-during-handoff.json",
+                  "handoff-history-rewritten.json",
               },
           }
 
@@ -258,7 +274,13 @@ jobs:
                       if row["validation_scope"] == "synthetic_runtime_fixture"
                   ]
 
-                  expected_mode = "v0.5-examples" if version == "0.5.0" else "examples"
+                  if version == "0.5.0":
+                      expected_mode = "v0.5-examples"
+                  elif version == "0.6.0":
+                      expected_mode = "v0.6-examples"
+                  else:
+                      expected_mode = "examples"
+
                   complete = (
                       report["mode"] == expected_mode
                       and report["total"] == len(rows)
@@ -281,7 +303,7 @@ jobs:
                           for row in runtime
                       )
 
-                  if version in {"0.3.0", "0.4.0", "0.5.0"}:
+                  if version in {"0.3.0", "0.4.0", "0.5.0", "0.6.0"}:
                       reject_rows = [
                           row
                           for row in rows
