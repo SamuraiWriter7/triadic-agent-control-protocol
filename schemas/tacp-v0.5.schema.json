@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/tacp/schemas/tacp-v0.5.schema.json",
+  "title": "TACP v0.5.0 Post-Remediation Verification and Escalation",
+  "description": "Structural validation for TACP v0.5.0 remediation outcome bundles. Semantic validation is required for result-to-closure consistency, chronological ordering, freshness, deadline handling, exact reference binding, evidence interpretation, omission of new effects, and prohibition of successor remediation.",
+  "$comment": "Strict JSON parsing is REQUIRED: reject duplicate object members and non-finite numbers. Date-time format assertion SHOULD be enabled. Document conformance does not prove evidence authenticity, external effect truth, scout independence, globally unique remediation, runtime privilege isolation, or that escalation reached an authorized human process.",
+
+  "oneOf": [
+    {"$ref": "#/$defs/remediation_outcome_bundle"}
+  ],
+
+  "$defs": {
+    "nonempty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "reference": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "utc_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+
+    "references": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/reference"},
+      "uniqueItems": true
+    },
+
+    "nonempty_references": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/reference"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+
+    "string_list": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonempty_string"},
+      "uniqueItems": true
+    },
+
+    "extensions": {
+      "type": "object",
+      "description": "Optional non-authoritative extension data."
+    },
+
+    "verification_limits": {
+      "type": "object",
+      "properties": {
+        "max_observation_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_verification_age_seconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "final_verification_deadline": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "observation_scope": {
+          "$ref": "#/$defs/nonempty_references"
+        },
+        "evidence_retrieval_budget": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "max_observation_count",
+        "max_verification_age_seconds",
+        "final_verification_deadline",
+        "observation_scope",
+        "evidence_retrieval_budget"
+      ],
+      "additionalProperties": false
+    },
+
+    "post_remediation_observation": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.5.0"},
+        "record_type": {"const": "post_remediation_observation"},
+        "record_id": {"$ref": "#/$defs/nonempty_string"},
+        "outcome_id": {"$ref": "#/$defs/nonempty_string"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "created_at": {"$ref": "#/$defs/utc_timestamp"},
+        "observed_at": {"$ref": "#/$defs/utc_timestamp"},
+        "producer_id": {"$ref": "#/$defs/nonempty_string"},
+        "producer_role": {"const": "scout"},
+        "target_refs": {"$ref": "#/$defs/nonempty_references"},
+        "evidence_refs": {"$ref": "#/$defs/nonempty_references"},
+        "observed_effects": {"$ref": "#/$defs/string_list"},
+        "uncertainties": {"$ref": "#/$defs/string_list"},
+        "reason": {"$ref": "#/$defs/nonempty_string"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "outcome_id",
+        "remediation_ref",
+        "remediation_operation_id",
+        "created_at",
+        "observed_at",
+        "producer_id",
+        "producer_role",
+        "target_refs",
+        "evidence_refs",
+        "observed_effects",
+        "uncertainties",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "remediation_verification": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.5.0"},
+        "record_type": {"const": "remediation_verification"},
+        "record_id": {"$ref": "#/$defs/nonempty_string"},
+        "outcome_id": {"$ref": "#/$defs/nonempty_string"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "created_at": {"$ref": "#/$defs/utc_timestamp"},
+        "evaluated_at": {"$ref": "#/$defs/utc_timestamp"},
+        "producer_id": {"$ref": "#/$defs/nonempty_string"},
+        "producer_role": {"const": "analyst"},
+        "observation_refs": {"$ref": "#/$defs/nonempty_references"},
+        "result": {
+          "type": "string",
+          "enum": [
+            "confirmed_effective",
+            "confirmed_partially_effective",
+            "confirmed_ineffective",
+            "confirmed_harmful",
+            "unresolved",
+            "not_dispatched"
+          ]
+        },
+        "remaining_effects": {"$ref": "#/$defs/string_list"},
+        "new_effects": {"$ref": "#/$defs/string_list"},
+        "uncertainties": {"$ref": "#/$defs/string_list"},
+        "reason": {"$ref": "#/$defs/nonempty_string"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "outcome_id",
+        "remediation_ref",
+        "remediation_operation_id",
+        "created_at",
+        "evaluated_at",
+        "producer_id",
+        "producer_role",
+        "observation_refs",
+        "result",
+        "remaining_effects",
+        "new_effects",
+        "uncertainties",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "remediation_closure": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.5.0"},
+        "record_type": {"const": "remediation_closure"},
+        "record_id": {"$ref": "#/$defs/nonempty_string"},
+        "outcome_id": {"$ref": "#/$defs/nonempty_string"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "created_at": {"$ref": "#/$defs/utc_timestamp"},
+        "producer_id": {"$ref": "#/$defs/nonempty_string"},
+        "producer_role": {"const": "controller"},
+        "verification_ref": {"$ref": "#/$defs/reference"},
+        "status": {
+          "type": "string",
+          "enum": ["completed", "escalated"]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "remediation_effective",
+              "remediation_not_dispatched",
+              "partial_remediation",
+              "ineffective_remediation",
+              "harmful_remediation",
+              "unresolved_remediation_outcome",
+              "verification_deadline_reached",
+              "evidence_stale",
+              "evidence_conflict",
+              "target_unavailable",
+              "execution_outcome_unknown"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "basis_refs": {"$ref": "#/$defs/nonempty_references"},
+        "escalation_required": {"type": "boolean"},
+        "escalation_scope": {"$ref": "#/$defs/string_list"},
+        "prohibited_automatic_actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "repeat_source_operation",
+              "repeat_remediation_operation",
+              "create_remediation_of_remediation",
+              "self_expand_authority"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "reason": {"$ref": "#/$defs/nonempty_string"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "outcome_id",
+        "remediation_ref",
+        "remediation_operation_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "verification_ref",
+        "status",
+        "reason_codes",
+        "basis_refs",
+        "escalation_required",
+        "escalation_scope",
+        "prohibited_automatic_actions",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "$comment": "The semantic validator MUST enforce status/result consistency, escalation_required semantics, required escalation scope, and the mandatory prohibition set for escalated closures."
+    },
+
+    "remediation_outcome_record": {
+      "oneOf": [
+        {"$ref": "#/$defs/post_remediation_observation"},
+        {"$ref": "#/$defs/remediation_verification"},
+        {"$ref": "#/$defs/remediation_closure"}
+      ]
+    },
+
+    "remediation_outcome_bundle": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.5.0"},
+        "document_type": {"const": "remediation_outcome_bundle"},
+        "outcome_id": {"$ref": "#/$defs/nonempty_string"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "verification_limits": {"$ref": "#/$defs/verification_limits"},
+        "records": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/remediation_outcome_record"},
+          "minItems": 3
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "document_type",
+        "outcome_id",
+        "remediation_ref",
+        "remediation_operation_id",
+        "verification_limits",
+        "records"
+      ],
+      "additionalProperties": false,
+      "$comment": "The semantic validator MUST require one or more observations followed by exactly one remediation_verification and exactly one final remediation_closure; all records must bind the bundle identity and remediation identity."
+    }
+  }
+}
