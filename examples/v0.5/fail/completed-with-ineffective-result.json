@@ -1,0 +1,87 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-ineffective-closed-completed-001",
+  "remediation_ref": "remediation-009",
+  "remediation_operation_id": "operation-remediation-009",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T02:40:00Z",
+    "observation_scope": [
+      "target://configuration/service-i"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-ineffective-closed-completed-001",
+      "outcome_id": "outcome-ineffective-closed-completed-001",
+      "remediation_ref": "remediation-009",
+      "remediation_operation_id": "operation-remediation-009",
+      "created_at": "2026-10-09T01:58:00Z",
+      "observed_at": "2026-10-09T01:57:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-i"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-i/post-remediation-001"
+      ],
+      "observed_effects": [
+        "The unintended configuration remains unchanged after the remediation attempt."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh target-state evidence shows that the remediation did not produce the required corrective effect."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-ineffective-closed-completed-001",
+      "outcome_id": "outcome-ineffective-closed-completed-001",
+      "remediation_ref": "remediation-009",
+      "remediation_operation_id": "operation-remediation-009",
+      "created_at": "2026-10-09T01:59:00Z",
+      "evaluated_at": "2026-10-09T01:58:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-ineffective-closed-completed-001"
+      ],
+      "result": "confirmed_ineffective",
+      "remaining_effects": [
+        "The original unintended configuration remains active."
+      ],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "Independent post-remediation evidence establishes that the remediation did not achieve its required outcome."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-ineffective-closed-completed-001",
+      "outcome_id": "outcome-ineffective-closed-completed-001",
+      "remediation_ref": "remediation-009",
+      "remediation_operation_id": "operation-remediation-009",
+      "created_at": "2026-10-09T02:00:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-ineffective-closed-completed-001",
+      "status": "completed",
+      "reason_codes": [
+        "ineffective_remediation"
+      ],
+      "basis_refs": [
+        "verification-ineffective-closed-completed-001",
+        "observation-ineffective-closed-completed-001"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "This invalid fixture incorrectly closes a confirmed ineffective remediation as completed."
+    }
+  ]
+}
