@@ -37,6 +37,10 @@ KNOWN_FAILURES_V05 = {
     "verification-after-deadline.json": "verification_deadline_exceeded",
     "not-dispatched-with-execution-evidence.json": "non_dispatch_conflict",
     "new-effect-silently-omitted.json": "new_effect_omitted",
+    "not-dispatched-without-terminal-policy.json": "not_dispatched_policy_missing",
+    "observation-after-verification.json": "observation_after_verification",
+    "observation-outside-scope.json": "observation_scope_violation",
+    "evidence-budget-exceeded.json": "evidence_budget_exceeded",
 }
 
 RUNTIME_FIXTURES_V05 = {
@@ -116,6 +120,35 @@ def validate_semantics(bundle: dict[str, Any]) -> list[legacy.Diagnostic]:
             "Post-remediation observation count exceeds max_observation_count.",
         )
 
+    scope = limits.get("observation_scope")
+    scope_set = set(scope) if isinstance(scope, list) else set()
+    if scope_set:
+        for obs_i, observation in observations:
+            target_refs = observation.get("target_refs")
+            target_refs = target_refs if isinstance(target_refs, list) else []
+            outside = sorted({ref for ref in target_refs if ref not in scope_set})
+            if outside:
+                add(
+                    "observation_scope_violation",
+                    f"/records/{obs_i}/target_refs",
+                    "Post-remediation observation target_refs MUST remain inside verification_limits.observation_scope.",
+                )
+
+    evidence_budget = limits.get("evidence_retrieval_budget")
+    if isinstance(evidence_budget, int):
+        unique_evidence = {
+            ref
+            for _, observation in observations
+            for ref in (observation.get("evidence_refs") or [])
+            if isinstance(ref, str)
+        }
+        if len(unique_evidence) > evidence_budget:
+            add(
+                "evidence_budget_exceeded",
+                "/verification_limits/evidence_retrieval_budget",
+                "Unique evidence references exceed the declared evidence_retrieval_budget.",
+            )
+
     bundle_outcome = bundle.get("outcome_id")
     bundle_remediation = bundle.get("remediation_ref")
     bundle_operation = bundle.get("remediation_operation_id")
@@ -162,7 +195,13 @@ def validate_semantics(bundle: dict[str, Any]) -> list[legacy.Diagnostic]:
                     observed_at = observation.get("observed_at")
                     if isinstance(observed_at, str):
                         age = evaluated - _instant(observed_at)
-                        if age > max_age:
+                        if age < 0:
+                            add(
+                                "observation_after_verification",
+                                f"/records/{obs_i}/observed_at",
+                                "A post-remediation observation MUST NOT occur after the verification evaluation time.",
+                            )
+                        elif age > max_age:
                             add(
                                 "evidence_stale",
                                 f"/records/{obs_i}/observed_at",
@@ -213,8 +252,25 @@ def validate_semantics(bundle: dict[str, Any]) -> list[legacy.Diagnostic]:
             if status != "escalated" or escalation_required is not True:
                 add("invalid_remediation_closure", f"/records/{closure_i}/status", f"{result} MUST close as escalated.")
         elif result == "not_dispatched":
-            if status != "completed" or escalation_required is not False:
-                add("invalid_remediation_closure", f"/records/{closure_i}/status", "Clean authoritative not_dispatched MAY close as completed without escalation.")
+            if status == "completed":
+                terminal_policy = bundle.get("terminal_policy")
+                allowed = (
+                    isinstance(terminal_policy, dict)
+                    and terminal_policy.get("not_dispatched") == "completed"
+                )
+                if not allowed:
+                    add(
+                        "not_dispatched_policy_missing",
+                        "/terminal_policy/not_dispatched",
+                        "not_dispatched MAY close as completed only when the bundle explicitly declares that terminal policy.",
+                    )
+                if escalation_required is not False:
+                    add("invalid_remediation_closure", f"/records/{closure_i}/status", "A completed not_dispatched closure MUST NOT require escalation.")
+            elif status == "escalated":
+                if escalation_required is not True:
+                    add("invalid_remediation_closure", f"/records/{closure_i}/status", "An escalated not_dispatched closure MUST require escalation.")
+            else:
+                add("invalid_remediation_closure", f"/records/{closure_i}/status", "not_dispatched MUST close as completed-by-explicit-policy or escalated.")
 
         if status == "escalated":
             prohibited = set(closure.get("prohibited_automatic_actions") or [])
@@ -225,8 +281,8 @@ def validate_semantics(bundle: dict[str, Any]) -> list[legacy.Diagnostic]:
                     f"/records/{closure_i}/prohibited_automatic_actions",
                     "Escalated closure MUST prohibit repeat, recursive remediation, and self authority expansion.",
                 )
-            scope = closure.get("escalation_scope")
-            if not isinstance(scope, list) or not scope:
+            scope_values = closure.get("escalation_scope")
+            if not isinstance(scope_values, list) or not scope_values:
                 add("escalation_scope_missing", f"/records/{closure_i}/escalation_scope", "Escalated closure requires nonempty escalation_scope.")
 
         remaining = verification.get("remaining_effects") or []
@@ -253,8 +309,6 @@ def validate_document(bundle: dict[str, Any], validator: Any) -> list[legacy.Dia
         key=lambda e: (legacy.pointer(e.absolute_path), str(e.validator)),
     )
     if schema_errors:
-        # Keep semantic diagnostics too. This lets omission-oriented negative fixtures
-        # assert the intended semantic failure even when minItems/shape also rejects.
         return legacy.schema_diagnostics(bundle, schema_errors) + semantic
     return semantic
 
