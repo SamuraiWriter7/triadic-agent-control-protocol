@@ -1,0 +1,96 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-remediation-partial-001",
+  "remediation_ref": "remediation-002",
+  "remediation_operation_id": "operation-remediation-002",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T01:40:00Z",
+    "observation_scope": [
+      "target://configuration/service-b"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-remediation-partial-001",
+      "outcome_id": "outcome-remediation-partial-001",
+      "remediation_ref": "remediation-002",
+      "remediation_operation_id": "operation-remediation-002",
+      "created_at": "2026-10-09T01:27:00Z",
+      "observed_at": "2026-10-09T01:26:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-b"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-b/post-remediation-001",
+        "evidence://audit/service-b/post-remediation-001"
+      ],
+      "observed_effects": [
+        "One unintended configuration value has been corrected.",
+        "A second unintended configuration value remains present."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh target-state evidence shows that the remediation improved part of the target state but did not satisfy the full remediation objective."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-remediation-partial-001",
+      "outcome_id": "outcome-remediation-partial-001",
+      "remediation_ref": "remediation-002",
+      "remediation_operation_id": "operation-remediation-002",
+      "created_at": "2026-10-09T01:28:00Z",
+      "evaluated_at": "2026-10-09T01:27:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-remediation-partial-001"
+      ],
+      "result": "confirmed_partially_effective",
+      "remaining_effects": [
+        "A second unintended configuration value remains active inside the declared remediation scope."
+      ],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "Independent post-remediation evidence confirms a bounded improvement, but at least one required remediation outcome remains unmet."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-remediation-partial-001",
+      "outcome_id": "outcome-remediation-partial-001",
+      "remediation_ref": "remediation-002",
+      "remediation_operation_id": "operation-remediation-002",
+      "created_at": "2026-10-09T01:29:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-remediation-partial-001",
+      "status": "escalated",
+      "reason_codes": [
+        "partial_remediation"
+      ],
+      "basis_refs": [
+        "verification-remediation-partial-001",
+        "observation-remediation-partial-001"
+      ],
+      "escalation_required": true,
+      "escalation_scope": [
+        "Review the remaining unintended configuration state and determine whether a separately authorized external response is required."
+      ],
+      "prohibited_automatic_actions": [
+        "repeat_source_operation",
+        "repeat_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority"
+      ],
+      "reason": "The remediation path terminates as escalated because the operation was only partially effective. No additional remediation is authorized by this outcome bundle."
+    }
+  ]
+}
