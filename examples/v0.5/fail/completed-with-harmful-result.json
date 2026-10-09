@@ -1,0 +1,89 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-harmful-closed-completed-001",
+  "remediation_ref": "remediation-007",
+  "remediation_operation_id": "operation-remediation-007",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T02:30:00Z",
+    "observation_scope": [
+      "target://configuration/service-g"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-harmful-closed-completed-001",
+      "outcome_id": "outcome-harmful-closed-completed-001",
+      "remediation_ref": "remediation-007",
+      "remediation_operation_id": "operation-remediation-007",
+      "created_at": "2026-10-09T01:55:00Z",
+      "observed_at": "2026-10-09T01:54:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-g"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-g/post-remediation-001",
+        "evidence://audit/service-g/post-remediation-001"
+      ],
+      "observed_effects": [
+        "The original unintended configuration value is no longer present.",
+        "A new configuration conflict introduced by remediation now causes degraded service behavior."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh evidence establishes a new adverse effect attributable to the remediation operation."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-harmful-closed-completed-001",
+      "outcome_id": "outcome-harmful-closed-completed-001",
+      "remediation_ref": "remediation-007",
+      "remediation_operation_id": "operation-remediation-007",
+      "created_at": "2026-10-09T01:56:00Z",
+      "evaluated_at": "2026-10-09T01:55:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-harmful-closed-completed-001"
+      ],
+      "result": "confirmed_harmful",
+      "remaining_effects": [],
+      "new_effects": [
+        "A remediation-induced configuration conflict is degrading service behavior."
+      ],
+      "uncertainties": [],
+      "reason": "Independent post-remediation evidence confirms a new harmful effect."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-harmful-closed-completed-001",
+      "outcome_id": "outcome-harmful-closed-completed-001",
+      "remediation_ref": "remediation-007",
+      "remediation_operation_id": "operation-remediation-007",
+      "created_at": "2026-10-09T01:57:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-harmful-closed-completed-001",
+      "status": "completed",
+      "reason_codes": [
+        "harmful_remediation"
+      ],
+      "basis_refs": [
+        "verification-harmful-closed-completed-001",
+        "observation-harmful-closed-completed-001"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "This invalid fixture incorrectly closes a harmful remediation outcome as completed."
+    }
+  ]
+}
