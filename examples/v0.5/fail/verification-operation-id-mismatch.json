@@ -1,0 +1,85 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-operation-id-mismatch-001",
+  "remediation_ref": "remediation-011",
+  "remediation_operation_id": "operation-remediation-011",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T03:00:00Z",
+    "observation_scope": [
+      "target://configuration/service-k"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-operation-id-mismatch-001",
+      "outcome_id": "outcome-operation-id-mismatch-001",
+      "remediation_ref": "remediation-011",
+      "remediation_operation_id": "operation-remediation-011",
+      "created_at": "2026-10-09T02:04:00Z",
+      "observed_at": "2026-10-09T02:03:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-k"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-k/post-remediation-001"
+      ],
+      "observed_effects": [
+        "The target state appears to match the intended remediation objective."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh evidence was collected for the remediation operation identified by the enclosing outcome bundle."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-operation-id-mismatch-001",
+      "outcome_id": "outcome-operation-id-mismatch-001",
+      "remediation_ref": "remediation-011",
+      "remediation_operation_id": "operation-remediation-999",
+      "created_at": "2026-10-09T02:05:00Z",
+      "evaluated_at": "2026-10-09T02:04:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-operation-id-mismatch-001"
+      ],
+      "result": "confirmed_effective",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "This invalid fixture verifies a different remediation operation than the one bound by the outcome bundle."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-operation-id-mismatch-001",
+      "outcome_id": "outcome-operation-id-mismatch-001",
+      "remediation_ref": "remediation-011",
+      "remediation_operation_id": "operation-remediation-011",
+      "created_at": "2026-10-09T02:06:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-operation-id-mismatch-001",
+      "status": "completed",
+      "reason_codes": [
+        "remediation_effective"
+      ],
+      "basis_refs": [
+        "verification-operation-id-mismatch-001",
+        "observation-operation-id-mismatch-001"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "This invalid fixture closes the outcome even though the verification record is bound to another remediation operation ID."
+    }
+  ]
+}
