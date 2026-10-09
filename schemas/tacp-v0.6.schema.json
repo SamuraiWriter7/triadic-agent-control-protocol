@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/tacp/schemas/tacp-v0.6.schema.json",
+  "title": "TACP v0.6.0 Escalation Handoff and Responsibility Transfer",
+  "description": "Structural validation for TACP v0.6.0 escalation_handoff_bundle documents. Semantic validation is required for exact cross-record binding, chronology, requested/accepted scope containment, receiver authorization constraints, deadline handling, result-to-closure consistency, and prohibition of autonomous restart or privilege expansion.",
+  "$comment": "Strict JSON parsing is REQUIRED: reject duplicate object members and non-finite numbers. Date-time format assertion SHOULD be enabled. Document conformance does not prove receiver identity authenticity, real authority, actual responsibility acceptance, external incident resolution, or runtime privilege isolation.",
+
+  "oneOf": [
+    {"$ref": "#/$defs/escalation_handoff_bundle"}
+  ],
+
+  "$defs": {
+    "nonempty_string": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "reference": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "utc_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+
+    "references": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/reference"},
+      "uniqueItems": true
+    },
+
+    "nonempty_references": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/reference"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+
+    "string_list": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonempty_string"},
+      "uniqueItems": true
+    },
+
+    "nonempty_string_list": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/nonempty_string"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+
+    "extensions": {
+      "type": "object",
+      "description": "Optional non-authoritative extension data."
+    },
+
+    "handoff_limits": {
+      "type": "object",
+      "properties": {
+        "final_handoff_deadline": {"$ref": "#/$defs/utc_timestamp"},
+        "permitted_receiver_refs": {"$ref": "#/$defs/nonempty_references"},
+        "max_delivery_observation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence_retrieval_budget": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_acceptance_age_seconds": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "final_handoff_deadline",
+        "permitted_receiver_refs",
+        "max_delivery_observation_count",
+        "evidence_retrieval_budget",
+        "max_acceptance_age_seconds"
+      ],
+      "additionalProperties": false
+    },
+
+    "handoff_request": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.6.0"},
+        "record_type": {"const": "handoff_request"},
+        "record_id": {"$ref": "#/$defs/nonempty_string"},
+        "handoff_id": {"$ref": "#/$defs/nonempty_string"},
+        "escalation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "created_at": {"$ref": "#/$defs/utc_timestamp"},
+        "producer_id": {"$ref": "#/$defs/nonempty_string"},
+        "producer_role": {"const": "controller"},
+        "receiver_ref": {"$ref": "#/$defs/reference"},
+        "requested_scope": {"$ref": "#/$defs/nonempty_string_list"},
+        "reason_codes": {"$ref": "#/$defs/nonempty_string_list"},
+        "basis_refs": {"$ref": "#/$defs/nonempty_references"},
+        "requested_by_authority_ref": {"$ref": "#/$defs/reference"},
+        "deadline": {"$ref": "#/$defs/utc_timestamp"},
+        "reason": {"$ref": "#/$defs/nonempty_string"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "handoff_id",
+        "escalation_ref",
+        "remediation_ref",
+        "remediation_operation_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "receiver_ref",
+        "requested_scope",
+        "reason_codes",
+        "basis_refs",
+        "requested_by_authority_ref",
+        "deadline",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "handoff_delivery_observation": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.6.0"},
+        "record_type": {"const": "handoff_delivery_observation"},
+        "record_id": {"$ref": "#/$defs/nonempty_string"},
+        "handoff_id": {"$ref": "#/$defs/nonempty_string"},
+        "escalation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "created_at": {"$ref": "#/$defs/utc_timestamp"},
+        "observed_at": {"$ref": "#/$defs/utc_timestamp"},
+        "producer_id": {"$ref": "#/$defs/nonempty_string"},
+        "producer_role": {"enum": ["scout", "controller", "transport_observer"]},
+        "receiver_ref": {"$ref": "#/$defs/reference"},
+        "delivery_state": {
+          "type": "string",
+          "enum": [
+            "submitted",
+            "delivered",
+            "transport_acknowledged",
+            "delivery_failed",
+            "receiver_unavailable",
+            "conflicting"
+          ]
+        },
+        "evidence_refs": {"$ref": "#/$defs/nonempty_references"},
+        "uncertainties": {"$ref": "#/$defs/string_list"},
+        "reason": {"$ref": "#/$defs/nonempty_string"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "handoff_id",
+        "escalation_ref",
+        "remediation_ref",
+        "remediation_operation_id",
+        "created_at",
+        "observed_at",
+        "producer_id",
+        "producer_role",
+        "receiver_ref",
+        "delivery_state",
+        "evidence_refs",
+        "uncertainties",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+
+    "handoff_disposition": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.6.0"},
+        "record_type": {"const": "handoff_disposition"},
+        "record_id": {"$ref": "#/$defs/nonempty_string"},
+        "handoff_id": {"$ref": "#/$defs/nonempty_string"},
+        "escalation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "created_at": {"$ref": "#/$defs/utc_timestamp"},
+        "request_ref": {"$ref": "#/$defs/reference"},
+        "result": {
+          "type": "string",
+          "enum": ["accepted", "rejected", "unconfirmed", "timeout"]
+        },
+        "receiver_id": {"$ref": "#/$defs/nonempty_string"},
+        "receiver_type": {
+          "type": "string",
+          "enum": ["human", "external_process", "organization", "controller"]
+        },
+        "receiver_ref": {"$ref": "#/$defs/reference"},
+        "receiver_authority_ref": {"$ref": "#/$defs/reference"},
+        "accepted_scope": {"$ref": "#/$defs/string_list"},
+        "accepted_at": {"$ref": "#/$defs/utc_timestamp"},
+        "acceptance_evidence_refs": {"$ref": "#/$defs/references"},
+        "remaining_constraints": {"$ref": "#/$defs/string_list"},
+        "disposition_evidence_refs": {"$ref": "#/$defs/nonempty_references"},
+        "reason": {"$ref": "#/$defs/nonempty_string"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "handoff_id",
+        "escalation_ref",
+        "remediation_ref",
+        "remediation_operation_id",
+        "created_at",
+        "request_ref",
+        "result",
+        "receiver_ref",
+        "accepted_scope",
+        "acceptance_evidence_refs",
+        "remaining_constraints",
+        "disposition_evidence_refs",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "$comment": "The semantic validator MUST require receiver_id, receiver_type, receiver_authority_ref, accepted_at, nonempty accepted_scope, and nonempty acceptance_evidence_refs when result=accepted; non-accepted results MUST NOT be treated as responsibility transfer."
+    },
+
+    "handoff_closure": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.6.0"},
+        "record_type": {"const": "handoff_closure"},
+        "record_id": {"$ref": "#/$defs/nonempty_string"},
+        "handoff_id": {"$ref": "#/$defs/nonempty_string"},
+        "escalation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "created_at": {"$ref": "#/$defs/utc_timestamp"},
+        "producer_id": {"$ref": "#/$defs/nonempty_string"},
+        "producer_role": {"const": "controller"},
+        "disposition_ref": {"$ref": "#/$defs/reference"},
+        "status": {
+          "type": "string",
+          "enum": ["transferred", "not_transferred"]
+        },
+        "responsibility_transferred": {"type": "boolean"},
+        "receiver_ref": {"$ref": "#/$defs/reference"},
+        "receiver_authority_ref": {"$ref": "#/$defs/reference"},
+        "accepted_scope": {"$ref": "#/$defs/string_list"},
+        "remaining_responsibility_state": {"$ref": "#/$defs/nonempty_string"},
+        "basis_refs": {"$ref": "#/$defs/nonempty_references"},
+        "prohibited_automatic_actions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/nonempty_string"},
+          "minItems": 6,
+          "uniqueItems": true
+        },
+        "reason": {"$ref": "#/$defs/nonempty_string"},
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "record_type",
+        "record_id",
+        "handoff_id",
+        "escalation_ref",
+        "remediation_ref",
+        "remediation_operation_id",
+        "created_at",
+        "producer_id",
+        "producer_role",
+        "disposition_ref",
+        "status",
+        "responsibility_transferred",
+        "basis_refs",
+        "prohibited_automatic_actions",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "$comment": "The semantic validator MUST require the six mandatory prohibitions, status/result consistency, receiver binding for transferred closures, and remaining_responsibility_state for non-transferred closures."
+    },
+
+    "handoff_record": {
+      "oneOf": [
+        {"$ref": "#/$defs/handoff_request"},
+        {"$ref": "#/$defs/handoff_delivery_observation"},
+        {"$ref": "#/$defs/handoff_disposition"},
+        {"$ref": "#/$defs/handoff_closure"}
+      ]
+    },
+
+    "escalation_handoff_bundle": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {"const": "0.6.0"},
+        "document_type": {"const": "escalation_handoff_bundle"},
+        "handoff_id": {"$ref": "#/$defs/nonempty_string"},
+        "escalation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_ref": {"$ref": "#/$defs/reference"},
+        "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
+        "handoff_limits": {"$ref": "#/$defs/handoff_limits"},
+        "records": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/handoff_record"},
+          "minItems": 3
+        },
+        "extensions": {"$ref": "#/$defs/extensions"}
+      },
+      "required": [
+        "protocol_version",
+        "document_type",
+        "handoff_id",
+        "escalation_ref",
+        "remediation_ref",
+        "remediation_operation_id",
+        "handoff_limits",
+        "records"
+      ],
+      "additionalProperties": false,
+      "$comment": "The semantic validator MUST require exactly one handoff_request, zero or more bounded handoff_delivery_observation records, exactly one handoff_disposition, and exactly one final handoff_closure; all records must bind the same handoff and remediation identities."
+    }
+  }
+}
