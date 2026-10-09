@@ -1,0 +1,85 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-stale-evidence-001",
+  "remediation_ref": "remediation-010",
+  "remediation_operation_id": "operation-remediation-010",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 300,
+    "final_verification_deadline": "2026-10-09T02:50:00Z",
+    "observation_scope": [
+      "target://configuration/service-j"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-stale-evidence-001",
+      "outcome_id": "outcome-stale-evidence-001",
+      "remediation_ref": "remediation-010",
+      "remediation_operation_id": "operation-remediation-010",
+      "created_at": "2026-10-09T02:01:00Z",
+      "observed_at": "2026-10-09T01:50:00Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-j"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-j/stale-post-remediation-001"
+      ],
+      "observed_effects": [
+        "The target appeared to match the remediation objective at the stale observation time."
+      ],
+      "uncertainties": [],
+      "reason": "This fixture intentionally uses evidence older than the declared maximum verification age."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-stale-evidence-001",
+      "outcome_id": "outcome-stale-evidence-001",
+      "remediation_ref": "remediation-010",
+      "remediation_operation_id": "operation-remediation-010",
+      "created_at": "2026-10-09T02:02:00Z",
+      "evaluated_at": "2026-10-09T02:01:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-stale-evidence-001"
+      ],
+      "result": "confirmed_effective",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "This invalid fixture incorrectly treats stale post-remediation evidence as sufficient to confirm effectiveness."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-stale-evidence-001",
+      "outcome_id": "outcome-stale-evidence-001",
+      "remediation_ref": "remediation-010",
+      "remediation_operation_id": "operation-remediation-010",
+      "created_at": "2026-10-09T02:03:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-stale-evidence-001",
+      "status": "completed",
+      "reason_codes": [
+        "remediation_effective"
+      ],
+      "basis_refs": [
+        "verification-stale-evidence-001",
+        "observation-stale-evidence-001"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "This invalid fixture incorrectly closes the remediation as completed using stale evidence."
+    }
+  ]
+}
