@@ -2,6 +2,15 @@
 
 This changelog records specification and validation milestones. It does not imply production release certification.
 
+## 2026-10-09 — v0.5 final consistency patch
+
+- GitHub Actions run #147 succeeded on Python 3.10 and 3.12 at commit `2a9bd1cc7170dca99a2ccffce1aae2a636211667`.
+- Registered v0.5 suite expanded to 5 positive and 18 negative fixtures; 23/23 expected outcomes matched.
+- Added explicit `terminal_policy` binding for clean `not_dispatched` closure.
+- Reject future-dated observations, out-of-scope observation targets, and unique evidence-budget overruns.
+- Added four regression negatives and exercised extensible escalation prohibitions in a positive fixture.
+- Clarified native v0.5 outcome-bundle schema scope and observation/verification/closure cardinality.
+
 ## 2026-10-09 — v0.5 validation milestone
 
 - GitHub Actions run #134 completed successfully on Python 3.10 and 3.12.
