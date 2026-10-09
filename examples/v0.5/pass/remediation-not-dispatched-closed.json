@@ -13,6 +13,9 @@
     ],
     "evidence_retrieval_budget": 5
   },
+  "terminal_policy": {
+    "not_dispatched": "completed"
+  },
   "records": [
     {
       "protocol_version": "0.5.0",
@@ -83,7 +86,7 @@
       "escalation_required": false,
       "escalation_scope": [],
       "prohibited_automatic_actions": [],
-      "reason": "The outcome path closes cleanly because authoritative evidence establishes non-dispatch and no remediation execution effect. This closure does not authorize a retry."
+      "reason": "The explicit terminal policy permits a clean completed non-dispatch closure because authoritative evidence establishes non-dispatch and no remediation execution effect. This closure does not authorize a retry."
     }
   ]
 }
