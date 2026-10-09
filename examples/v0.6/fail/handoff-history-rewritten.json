@@ -1,0 +1,149 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-history-rewrite-001",
+  "escalation_ref": "closure-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T08:45:00Z",
+    "permitted_receiver_refs": [
+      "receiver://human/incident-commander-01"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-history-rewrite-001",
+      "handoff_id": "handoff-history-rewrite-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:20:00Z",
+      "producer_id": "controller://tacp/controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "requested_scope": [
+        "Review the escalated harmful remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "reason_codes": [
+        "remediation_escalated",
+        "independent_handoff_required"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-001",
+        "verification-remediation-harmful-001"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation-policy-01",
+      "deadline": "2026-10-09T08:45:00Z",
+      "reason": "Escalated remediation requires explicit transfer to an independently governed receiving authority."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "handoff-delivery-history-rewrite-001",
+      "handoff_id": "handoff-history-rewrite-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:21:00Z",
+      "producer_id": "transport://handoff-relay-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "receipt://transport/delivery-history-rewrite-001"
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-history-rewrite-001",
+      "handoff_id": "handoff-history-rewrite-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:24:00Z",
+      "request_ref": "handoff-request-history-rewrite-001",
+      "result": "accepted",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_id": "incident-commander-01",
+      "receiver_type": "human",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review the escalated harmful remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "accepted_at": "2026-10-09T08:23:30Z",
+      "acceptance_evidence_refs": [
+        "receipt://handoff/acceptance-history-rewrite-001"
+      ],
+      "remaining_constraints": [
+        "Acceptance transfers review responsibility only",
+        "No execution authorization is created by this acceptance",
+        "Original TACP remediation path remains stopped"
+      ],
+      "disposition_evidence_refs": [
+        "receipt://handoff/acceptance-history-rewrite-001",
+        "registry://authority/incident-command-duty-01"
+      ],
+      "reason": "Receiver explicitly accepted responsibility for review within the requested scope."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-history-rewrite-001",
+      "handoff_id": "handoff-history-rewrite-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:25:00Z",
+      "producer_id": "controller://tacp/controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-history-rewrite-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review the escalated harmful remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "basis_refs": [
+        "handoff-request-history-rewrite-001",
+        "handoff-disposition-history-rewrite-001",
+        "receipt://handoff/acceptance-history-rewrite-001"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Responsibility transfer recorded after explicit attributable acceptance."
+    }
+  ],
+  "extensions": {
+    "runtime_events": [
+      {
+        "event_id": "runtime-history-rewrite-001",
+        "event_type": "record_rewrite_attempt",
+        "occurred_at": "2026-10-09T08:31:00Z",
+        "actor_ref": "controller://tacp/controller-01",
+        "target_record_id": "handoff-disposition-history-rewrite-001",
+        "before_hash_ref": "hash://sha256/original-disposition-history-rewrite-001",
+        "after_hash_ref": "hash://sha256/rewritten-disposition-history-rewrite-001",
+        "reason": "The controller attempted to rewrite an already recorded handoff disposition after closure."
+      }
+    ],
+    "expected_failure": "handoff_history_rewritten"
+  }
+}
