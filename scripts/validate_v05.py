@@ -7,7 +7,6 @@ validation. Runtime-only assertions remain explicit synthetic fixture checks.
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -52,7 +51,7 @@ def diagnostic(code: str, path: str, message: str, layer: str = "semantic") -> l
     return legacy.Diagnostic(layer, code, path, message)
 
 
-def _instant(value: str) -> datetime:
+def _instant(value: str) -> Any:
     return legacy.instant(value)
 
 
@@ -162,7 +161,7 @@ def validate_semantics(bundle: dict[str, Any]) -> list[legacy.Diagnostic]:
                 for obs_i, observation in observations:
                     observed_at = observation.get("observed_at")
                     if isinstance(observed_at, str):
-                        age = (evaluated - _instant(observed_at)).total_seconds()
+                        age = evaluated - _instant(observed_at)
                         if age > max_age:
                             add(
                                 "evidence_stale",
