@@ -1,0 +1,135 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-stale-evidence-001",
+  "escalation_ref": "closure-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T08:30:00Z",
+    "permitted_receiver_refs": [
+      "receiver://human/incident-commander-01"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 300
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-stale-evidence-001",
+      "handoff_id": "handoff-stale-evidence-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:00:00Z",
+      "producer_id": "controller://tacp-escalation-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "requested_scope": [
+        "Review the escalated remediation outcome",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required"
+      ],
+      "reason_codes": [
+        "remediation_verification_escalated"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-001",
+        "verification-remediation-harmful-001"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation-policy-01",
+      "deadline": "2026-10-09T08:30:00Z",
+      "reason": "Escalated remediation requires an independently attributable receiving authority."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "delivery-stale-evidence-001",
+      "handoff_id": "handoff-stale-evidence-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:01:00Z",
+      "producer_id": "transport://handoff-relay-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence://transport/delivery-stale-evidence-001"
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-stale-evidence-001",
+      "handoff_id": "handoff-stale-evidence-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:20:00Z",
+      "request_ref": "handoff-request-stale-evidence-001",
+      "result": "accepted",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_id": "incident-commander-01",
+      "receiver_type": "human",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review the escalated remediation outcome",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required"
+      ],
+      "accepted_at": "2026-10-09T08:02:00Z",
+      "acceptance_evidence_refs": [
+        "evidence://acceptance/receipt-stale-001"
+      ],
+      "remaining_constraints": [
+        "Acceptance transfers review responsibility only and does not grant execution authorization",
+        "The original TACP executor and remediation path remain stopped"
+      ],
+      "disposition_evidence_refs": [
+        "evidence://acceptance/receipt-stale-001",
+        "evidence://authority/incident-command-duty-01"
+      ],
+      "reason": "Acceptance is recorded, but the acceptance evidence is older than the configured maximum acceptance age when the disposition is evaluated."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-stale-evidence-001",
+      "handoff_id": "handoff-stale-evidence-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T08:20:30Z",
+      "producer_id": "controller://tacp-escalation-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-stale-evidence-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review the escalated remediation outcome",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required"
+      ],
+      "basis_refs": [
+        "handoff-request-stale-evidence-001",
+        "handoff-disposition-stale-evidence-001",
+        "evidence://acceptance/receipt-stale-001"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Invalid negative case: transfer is closed using acceptance evidence that exceeds max_acceptance_age_seconds."
+    }
+  ],
+  "extensions": {
+    "expected_failure": "acceptance_evidence_stale"
+  }
+}
