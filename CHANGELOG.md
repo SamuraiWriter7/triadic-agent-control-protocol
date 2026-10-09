@@ -2,6 +2,34 @@
 
 This changelog records specification and validation milestones. It does not imply production release certification.
 
+## 2026-10-09 — v0.6 first complete cycle milestone
+
+- GitHub Actions run #179 succeeded on Python 3.10 and 3.12 at commit `e757fe98fdbef4d78292a38bb7b6e232c594267e`.
+- Registered v0.6 suite contains 5 positive and 16 negative fixtures; 21/21 expected outcomes matched.
+- Added native v0.6 schema and semantic validation for escalation handoff and responsibility transfer.
+- Added explicit distinction between escalation, delivery, acceptance, responsibility transfer, and execution authorization.
+- Require an explicit, attributable receiver disposition before responsibility can be transferred.
+- Require accepted scope to remain within requested scope and acceptance to remain within declared deadlines and freshness limits.
+- Require rejected, unconfirmed, and timed-out handoffs to close as `not_transferred` rather than silently assuming responsibility transfer.
+- Added synthetic runtime negatives for second remediation after handoff, authority expansion during handoff, and post-closure handoff-history rewriting.
+- Registered mandatory prohibitions against source restart, remediation restart, remediation-of-remediation, self-authority expansion, self-acceptance, and assuming acceptance from delivery.
+- Marked v0.6 as the **First Complete Cycle Boundary**:
+  `Plan → Authorize → Execute → Verify → Recover → Remediate → Verify Remediation → Escalate → Handoff`.
+- Entered feature-freeze / architecture-review phase before any further capability expansion.
+
+## v0.6.0 — Escalation Handoff and Responsibility Transfer
+
+- Start from a v0.5 remediation outcome already closed as `escalated`.
+- Treat handoff emission and transport acknowledgement as insufficient to establish responsibility transfer.
+- Require exactly one `handoff_request`, one `handoff_disposition`, and one terminal `handoff_closure`, with zero or more bounded delivery observations.
+- Support disposition results `accepted`, `rejected`, `unconfirmed`, and `timeout`.
+- Permit `transferred` only after explicit acceptance by an independently attributable receiving authority.
+- Preserve `not_transferred` as the terminal state for rejection, missing authoritative acceptance, or timeout.
+- Require receiver and accepted-scope binding across request, disposition, and closure.
+- Preserve source, recovery, remediation, v0.5 verification, and escalation history as immutable prior trace.
+- Keep the original autonomous path stopped after handoff closure.
+- Clarify that receiver acceptance transfers responsibility only; it does not grant TACP execution authorization.
+
 ## 2026-10-09 — v0.5 final consistency patch
 
 - GitHub Actions run #147 succeeded on Python 3.10 and 3.12 at commit `2a9bd1cc7170dca99a2ccffce1aae2a636211667`.
