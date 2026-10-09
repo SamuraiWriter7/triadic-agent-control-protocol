@@ -1,0 +1,128 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-timeout-invalid-transfer-001",
+  "escalation_ref": "closure-remediation-harmful-009",
+  "remediation_ref": "remediation-009",
+  "remediation_operation_id": "operation-remediation-009",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T05:30:00Z",
+    "permitted_receiver_refs": [
+      "receiver://human/incident-commander-09"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-timeout-invalid-transfer-001",
+      "handoff_id": "handoff-timeout-invalid-transfer-001",
+      "escalation_ref": "closure-remediation-harmful-009",
+      "remediation_ref": "remediation-009",
+      "remediation_operation_id": "operation-remediation-009",
+      "created_at": "2026-10-09T05:10:00Z",
+      "producer_id": "controller://tacp/controller-09",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://human/incident-commander-09",
+      "requested_scope": [
+        "Review the escalated remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "reason_codes": [
+        "remediation_escalated",
+        "independent_responsibility_transfer_required"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-009",
+        "verification-remediation-harmful-009"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation-policy-09",
+      "deadline": "2026-10-09T05:30:00Z",
+      "reason": "Escalated remediation requires explicit responsibility transfer to an independently governed receiver."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "handoff-delivery-timeout-invalid-transfer-001",
+      "handoff_id": "handoff-timeout-invalid-transfer-001",
+      "escalation_ref": "closure-remediation-harmful-009",
+      "remediation_ref": "remediation-009",
+      "remediation_operation_id": "operation-remediation-009",
+      "created_at": "2026-10-09T05:12:00Z",
+      "producer_id": "transport://handoff-channel-09",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://human/incident-commander-09",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence://transport/delivery-receipt-09"
+      ],
+      "uncertainties": [
+        "No authoritative acceptance receipt has been received"
+      ],
+      "reason": "Transport delivery confirms message delivery only and does not establish responsibility transfer."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-timeout-invalid-transfer-001",
+      "handoff_id": "handoff-timeout-invalid-transfer-001",
+      "escalation_ref": "closure-remediation-harmful-009",
+      "remediation_ref": "remediation-009",
+      "remediation_operation_id": "operation-remediation-009",
+      "created_at": "2026-10-09T05:31:00Z",
+      "request_ref": "handoff-request-timeout-invalid-transfer-001",
+      "result": "timeout",
+      "receiver_ref": "receiver://human/incident-commander-09",
+      "accepted_scope": [],
+      "acceptance_evidence_refs": [],
+      "remaining_constraints": [
+        "Original TACP executor remains stopped",
+        "Original remediation operation remains stopped",
+        "No receiver execution authority has been granted"
+      ],
+      "disposition_evidence_refs": [
+        "evidence://clock/deadline-expired-09",
+        "evidence://transport/no-acceptance-recorded-09"
+      ],
+      "reason": "The handoff deadline expired without an authoritative acceptance receipt."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-timeout-invalid-transfer-001",
+      "handoff_id": "handoff-timeout-invalid-transfer-001",
+      "escalation_ref": "closure-remediation-harmful-009",
+      "remediation_ref": "remediation-009",
+      "remediation_operation_id": "operation-remediation-009",
+      "created_at": "2026-10-09T05:32:00Z",
+      "producer_id": "controller://tacp/controller-09",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-timeout-invalid-transfer-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://human/incident-commander-09",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-09",
+      "accepted_scope": [
+        "Review the escalated remediation outcome",
+        "Decide whether a separately authorized incident-response action is required"
+      ],
+      "basis_refs": [
+        "handoff-request-timeout-invalid-transfer-001",
+        "handoff-disposition-timeout-invalid-transfer-001",
+        "evidence://clock/deadline-expired-09"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "INVALID: The handoff is marked transferred after the disposition timed out without acceptance."
+    }
+  ]
+}
