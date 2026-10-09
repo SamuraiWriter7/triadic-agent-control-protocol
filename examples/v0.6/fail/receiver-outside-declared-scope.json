@@ -1,0 +1,138 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-receiver-outside-scope-001",
+  "escalation_ref": "closure-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T06:25:00Z",
+    "permitted_receiver_refs": [
+      "receiver://human/incident-commander-01"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-receiver-outside-scope-001",
+      "handoff_id": "handoff-receiver-outside-scope-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:05:00Z",
+      "producer_id": "controller-escalation-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://external-process/unapproved-escalation-queue-09",
+      "requested_scope": [
+        "Review the escalated remediation outcome",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required"
+      ],
+      "reason_codes": [
+        "remediation_harmful",
+        "human_or_external_review_required"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-001",
+        "verification-remediation-harmful-001"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation-policy-01",
+      "deadline": "2026-10-09T06:25:00Z",
+      "reason": "Negative fixture: the requested receiver is outside the handoff limit permitted receiver set."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "handoff-delivery-receiver-outside-scope-001",
+      "handoff_id": "handoff-receiver-outside-scope-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:06:00Z",
+      "producer_id": "transport-observer-01",
+      "producer_role": "transport_observer",
+      "request_ref": "handoff-request-receiver-outside-scope-001",
+      "receiver_ref": "receiver://external-process/unapproved-escalation-queue-09",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence://transport/delivery-unapproved-queue-001"
+      ],
+      "uncertainties": [],
+      "reason": "The message was delivered, but the receiver was not permitted by handoff_limits."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-receiver-outside-scope-001",
+      "handoff_id": "handoff-receiver-outside-scope-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:08:00Z",
+      "request_ref": "handoff-request-receiver-outside-scope-001",
+      "result": "accepted",
+      "receiver_ref": "receiver://external-process/unapproved-escalation-queue-09",
+      "receiver_id": "unapproved-escalation-queue-09",
+      "receiver_type": "external_process",
+      "receiver_authority_ref": "authority://organization/unapproved-duty-controller-09",
+      "accepted_scope": [
+        "Review the escalated remediation outcome",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required"
+      ],
+      "accepted_at": "2026-10-09T06:07:30Z",
+      "acceptance_evidence_refs": [
+        "evidence://acceptance/unapproved-queue-receipt-001"
+      ],
+      "remaining_constraints": [
+        "Acceptance does not grant execution authorization",
+        "Original TACP executor and remediation path remain stopped"
+      ],
+      "disposition_evidence_refs": [
+        "evidence://acceptance/unapproved-queue-receipt-001",
+        "evidence://authority/unapproved-duty-controller-09"
+      ],
+      "reason": "Negative fixture: a receiver outside the declared permitted receiver set accepted the handoff."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-receiver-outside-scope-001",
+      "handoff_id": "handoff-receiver-outside-scope-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:09:00Z",
+      "producer_id": "controller-escalation-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-receiver-outside-scope-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://external-process/unapproved-escalation-queue-09",
+      "receiver_authority_ref": "authority://organization/unapproved-duty-controller-09",
+      "accepted_scope": [
+        "Review the escalated remediation outcome",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required"
+      ],
+      "basis_refs": [
+        "handoff-request-receiver-outside-scope-001",
+        "handoff-disposition-receiver-outside-scope-001",
+        "evidence://acceptance/unapproved-queue-receipt-001"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Negative fixture: responsibility was marked transferred even though the receiver was outside handoff_limits.permitted_receiver_refs."
+    }
+  ],
+  "extensions": {
+    "expected_failure": "receiver_outside_declared_scope"
+  }
+}
