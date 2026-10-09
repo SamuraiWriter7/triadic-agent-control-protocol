@@ -13,6 +13,9 @@
     ],
     "evidence_retrieval_budget": 5
   },
+  "terminal_policy": {
+    "not_dispatched": "completed"
+  },
   "records": [
     {
       "protocol_version": "0.5.0",
@@ -83,7 +86,7 @@
       "escalation_required": false,
       "escalation_scope": [],
       "prohibited_automatic_actions": [],
-      "reason": "This invalid fixture closes the remediation as a clean non-dispatch outcome even though the evidence proves that execution occurred."
+      "reason": "The terminal policy would permit clean non-dispatch completion, but this fixture is invalid at runtime because evidence proves that execution occurred."
     }
   ]
 }
