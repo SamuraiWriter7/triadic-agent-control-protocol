@@ -1,0 +1,87 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-remediation-effective-001",
+  "remediation_ref": "remediation-001",
+  "remediation_operation_id": "operation-remediation-001",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T01:30:00Z",
+    "observation_scope": [
+      "target://configuration/service-a"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-remediation-effective-001",
+      "outcome_id": "outcome-remediation-effective-001",
+      "remediation_ref": "remediation-001",
+      "remediation_operation_id": "operation-remediation-001",
+      "created_at": "2026-10-09T01:21:00Z",
+      "observed_at": "2026-10-09T01:20:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-a"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-a/post-remediation-001",
+        "evidence://audit/service-a/post-remediation-001"
+      ],
+      "observed_effects": [
+        "The unintended configuration value is no longer present.",
+        "The target now matches the remediation objective."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh target-state evidence independently confirms that the remediation objective has been achieved."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-remediation-effective-001",
+      "outcome_id": "outcome-remediation-effective-001",
+      "remediation_ref": "remediation-001",
+      "remediation_operation_id": "operation-remediation-001",
+      "created_at": "2026-10-09T01:22:00Z",
+      "evaluated_at": "2026-10-09T01:21:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-remediation-effective-001"
+      ],
+      "result": "confirmed_effective",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "Independent post-remediation evidence confirms the required target state with no remaining or newly observed adverse effect inside the declared scope."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-remediation-effective-001",
+      "outcome_id": "outcome-remediation-effective-001",
+      "remediation_ref": "remediation-001",
+      "remediation_operation_id": "operation-remediation-001",
+      "created_at": "2026-10-09T01:23:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-remediation-effective-001",
+      "status": "completed",
+      "reason_codes": [
+        "remediation_effective"
+      ],
+      "basis_refs": [
+        "verification-remediation-effective-001",
+        "observation-remediation-effective-001"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "The remediation is closed as completed because independent verification established confirmed effectiveness within the bounded verification window."
+    }
+  ]
+}
