@@ -2,7 +2,7 @@
 
 A protocol for coordinating scout, analyst, and executor roles under independently enforced authorization, bounded review, traceability, recovery, remediation, and post-remediation verification controls.
 
-**Status:** evolving specification. v0.1.0-v0.5.0 registered example suites passed GitHub Actions run #134 on Python 3.10 and 3.12 on 2026-10-09. This is **not** a certification of runtime safety or deployment conformance.
+**Status:** evolving specification. v0.1.0-v0.5.0 registered example suites passed GitHub Actions run #147 on Python 3.10 and 3.12 on 2026-10-09. This is **not** a certification of runtime safety or deployment conformance.
 
 ## Version map
 
@@ -89,9 +89,11 @@ GitHub Actions validates v0.1-v0.5 on Python 3.10 and 3.12.
 The v0.5 registered suite contains:
 
 - 5 positive examples,
-- 14 negative examples,
+- 18 negative examples,
 - 4 registered synthetic runtime negatives,
-- 19/19 expected outcomes matched in GitHub Actions run #134.
+- 23/23 expected outcomes matched in GitHub Actions run #147.
+
+The final consistency patch also registers negative cases for missing non-dispatch terminal policy, future-dated observation, out-of-scope observation, and evidence-budget overflow. `not_dispatched` clean completion requires an explicit terminal policy; extra strict escalation prohibitions are permitted.
 
 The synthetic runtime negatives are:
 
