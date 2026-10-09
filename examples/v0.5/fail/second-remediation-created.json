@@ -1,0 +1,104 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-second-remediation-created-001",
+  "remediation_ref": "remediation-013",
+  "remediation_operation_id": "operation-remediation-013",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T03:00:00Z",
+    "observation_scope": [
+      "target://configuration/service-m"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-second-remediation-created-001",
+      "outcome_id": "outcome-second-remediation-created-001",
+      "remediation_ref": "remediation-013",
+      "remediation_operation_id": "operation-remediation-013",
+      "created_at": "2026-10-09T02:06:00Z",
+      "observed_at": "2026-10-09T02:05:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-m"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-m/post-remediation-001"
+      ],
+      "observed_effects": [
+        "The first remediation corrected one part of the target state but left another required correction unresolved."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh post-remediation evidence shows that the first remediation was only partially effective."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-second-remediation-created-001",
+      "outcome_id": "outcome-second-remediation-created-001",
+      "remediation_ref": "remediation-013",
+      "remediation_operation_id": "operation-remediation-013",
+      "created_at": "2026-10-09T02:07:00Z",
+      "evaluated_at": "2026-10-09T02:06:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-second-remediation-created-001"
+      ],
+      "result": "confirmed_partially_effective",
+      "remaining_effects": [
+        "A required corrective effect remains unmet after the first remediation."
+      ],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "Independent evidence confirms that the first remediation did not fully achieve its required outcome."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-second-remediation-created-001",
+      "outcome_id": "outcome-second-remediation-created-001",
+      "remediation_ref": "remediation-013",
+      "remediation_operation_id": "operation-remediation-013",
+      "created_at": "2026-10-09T02:08:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-second-remediation-created-001",
+      "status": "escalated",
+      "reason_codes": [
+        "partial_remediation"
+      ],
+      "basis_refs": [
+        "verification-second-remediation-created-001",
+        "observation-second-remediation-created-001"
+      ],
+      "escalation_required": true,
+      "escalation_scope": [
+        "Review the unresolved target state before any separately authorized follow-on action is considered."
+      ],
+      "prohibited_automatic_actions": [
+        "repeat_source_operation",
+        "repeat_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority"
+      ],
+      "reason": "The first remediation path is escalated and explicitly prohibits automatic successor remediation."
+    }
+  ],
+  "extensions": {
+    "runtime_evidence": {
+      "successor_remediation_created": true,
+      "successor_remediation_ref": "remediation-014",
+      "successor_operation_id": "operation-remediation-014",
+      "creation_mode": "automatic",
+      "triggered_by_outcome_id": "outcome-second-remediation-created-001",
+      "created_at": "2026-10-09T02:08:05Z"
+    }
+  }
+}
