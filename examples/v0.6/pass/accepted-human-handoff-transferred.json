@@ -1,0 +1,135 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-human-accepted-001",
+  "escalation_ref": "closure-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T04:45:00Z",
+    "permitted_receiver_refs": [
+      "receiver://human/incident-commander-01"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-human-accepted-001",
+      "handoff_id": "handoff-human-accepted-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T04:25:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "requested_scope": [
+        "Review the harmful remediation outcome.",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required."
+      ],
+      "reason_codes": [
+        "harmful_remediation",
+        "external_human_review_required"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-001",
+        "verification-remediation-harmful-001"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation-policy-01",
+      "deadline": "2026-10-09T04:45:00Z",
+      "reason": "The v0.5 remediation path terminated as escalated after independent verification established a harmful remediation outcome. Responsibility is requested from an independently governed human incident commander."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "delivery-observation-human-accepted-001",
+      "handoff_id": "handoff-human-accepted-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T04:26:15Z",
+      "observed_at": "2026-10-09T04:26:00Z",
+      "producer_id": "transport-observer-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence://incident-queue/handoff-human-accepted-001/delivered"
+      ],
+      "uncertainties": [],
+      "reason": "The incident handoff request was delivered to the declared receiver channel. Delivery alone does not establish responsibility acceptance."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-human-accepted-001",
+      "handoff_id": "handoff-human-accepted-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T04:29:00Z",
+      "request_ref": "handoff-request-human-accepted-001",
+      "result": "accepted",
+      "receiver_id": "incident-commander-01",
+      "receiver_type": "human",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review the harmful remediation outcome.",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required."
+      ],
+      "accepted_at": "2026-10-09T04:28:30Z",
+      "acceptance_evidence_refs": [
+        "evidence://incident-system/handoff-human-accepted-001/acceptance-receipt"
+      ],
+      "remaining_constraints": [
+        "Acceptance transfers review responsibility only and does not authorize execution.",
+        "The original TACP executor and remediation path remain stopped."
+      ],
+      "disposition_evidence_refs": [
+        "evidence://incident-system/handoff-human-accepted-001/acceptance-receipt",
+        "evidence://authority-registry/incident-command-duty-01"
+      ],
+      "reason": "The named human incident commander explicitly accepted the requested responsibility under an independently attributable incident-command authority context."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-human-accepted-001",
+      "handoff_id": "handoff-human-accepted-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T04:30:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-human-accepted-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "Review the harmful remediation outcome.",
+        "Assume responsibility for deciding whether a separately authorized incident-response action is required."
+      ],
+      "basis_refs": [
+        "handoff-request-human-accepted-001",
+        "handoff-disposition-human-accepted-001",
+        "evidence://incident-system/handoff-human-accepted-001/acceptance-receipt"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Responsibility for external review has been transferred through an explicit attributable acceptance receipt. No execution authority is created and the original autonomous TACP path remains stopped."
+    }
+  ]
+}
