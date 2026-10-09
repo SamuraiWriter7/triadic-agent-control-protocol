@@ -2,7 +2,7 @@
 
 **Snapshot:** 2026-10-09
 
-GitHub Actions run #134 completed successfully on Python 3.10 and 3.12 for the registered v0.1-v0.5 validation suites.
+GitHub Actions run #147 completed successfully on Python 3.10 and 3.12 for the registered v0.1-v0.5 validation suites.
 
 | Version | Primary scope | Registered validation status |
 | --- | --- | --- |
@@ -17,9 +17,9 @@ GitHub Actions run #134 completed successfully on Python 3.10 and 3.12 for the r
 The v0.5 suite currently contains:
 
 - 5 positive examples,
-- 14 negative examples,
+- 18 negative examples,
 - 4 registered synthetic runtime negatives,
-- 19/19 matched expected outcomes in GitHub Actions run #134.
+- 23/23 matched expected outcomes in GitHub Actions run #147.
 
 The registered negative cases cover:
 
@@ -36,7 +36,11 @@ The registered negative cases cover:
 - self-expansion of authority after remediation failure,
 - verification after the final verification deadline,
 - `not_dispatched` contradicted by execution evidence,
-- newly observed adverse effects omitted from verification.
+- newly observed adverse effects omitted from verification,
+- missing terminal policy for clean non-dispatch closure,
+- observation timestamps later than verification,
+- observations outside declared target scope,
+- unique evidence references exceeding the declared retrieval budget.
 
 The registered synthetic runtime negatives are:
 
