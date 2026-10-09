@@ -88,9 +88,10 @@
         "repeat_source_operation",
         "repeat_remediation_operation",
         "create_remediation_of_remediation",
-        "self_expand_authority"
+        "self_expand_authority",
+        "auto_transfer_to_privileged_executor"
       ],
-      "reason": "The remediation path terminates as escalated because independent verification established a new adverse effect. No automatic follow-on correction is authorized by this bundle."
+      "reason": "The remediation path terminates as escalated because independent verification established a new adverse effect. The extra prohibition demonstrates that deployments may add stricter automatic-action fences beyond the mandatory subset."
     }
   ]
 }
