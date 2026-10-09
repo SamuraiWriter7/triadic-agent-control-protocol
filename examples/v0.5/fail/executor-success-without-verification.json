@@ -1,0 +1,62 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-executor-only-success-001",
+  "remediation_ref": "remediation-005",
+  "remediation_operation_id": "operation-remediation-005",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T02:10:00Z",
+    "observation_scope": [
+      "target://configuration/service-e"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-executor-only-success-001",
+      "outcome_id": "outcome-executor-only-success-001",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T01:46:00Z",
+      "evaluated_at": "2026-10-09T01:45:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "executor-receipt-remediation-005"
+      ],
+      "result": "confirmed_effective",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "The remediation is declared effective solely because the executor reported success."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-executor-only-success-001",
+      "outcome_id": "outcome-executor-only-success-001",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T01:47:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-executor-only-success-001",
+      "status": "completed",
+      "reason_codes": [
+        "remediation_effective"
+      ],
+      "basis_refs": [
+        "verification-executor-only-success-001",
+        "executor-receipt-remediation-005"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "The bundle closes as completed without any independent post-remediation observation."
+    }
+  ]
+}
