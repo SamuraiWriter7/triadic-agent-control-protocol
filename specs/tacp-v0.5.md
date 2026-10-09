@@ -4,7 +4,7 @@
 
 **Protocol:** Triadic Agent Control Protocol  
 **Protocol version:** 0.5.0  
-**Status:** Draft — specification  
+**Status:** Draft — final consistency candidate  
 **Repository-relative path:** `specs/tacp-v0.5.md`
 
 ---
@@ -33,7 +33,7 @@ TACP v0.5 preserves:
 
 Version 0.5 adds a bounded process for determining what happened **after a remediation operation was attempted**.
 
-The central rule is:
+The central invariant is:
 
 > **A remediation attempt MUST NOT be treated as successful merely because it was admitted, dispatched, or reported as successful by the executor. Its external effect MUST be independently verified before the remediation can be closed as completed.**
 
@@ -48,17 +48,11 @@ TACP v0.5 addresses the following condition:
 1. a v0.4-compatible remediation has been admitted;
 2. a remediation mission has been dispatched or reached a terminal non-dispatch state;
 3. the system must determine the actual post-remediation condition;
-4. the system must decide whether the remediation is complete, ineffective, partially effective, harmful, or unresolved;
-5. no automatic remediation-of-remediation is permitted.
+4. the system must classify the remediation result;
+5. the system must close the path safely;
+6. no automatic remediation-of-remediation is permitted.
 
-Examples include:
-
-- a compensating transaction reports success but the target balance remains incorrect;
-- a corrective configuration change applies only partially;
-- a containment operation stops one effect but leaves another active;
-- a notification operation is dispatched but delivery cannot be established;
-- a remediation creates an unexpected secondary effect;
-- a remediation outcome cannot be observed before the verification deadline.
+Typical cases include partial correction, ineffective correction, secondary harm, uncertain delivery, missing evidence, contradictory evidence, and verification deadline exhaustion.
 
 ---
 
@@ -70,7 +64,7 @@ The following are outside the v0.5 profile:
 - recursive compensation chains;
 - autonomous policy expansion after remediation failure;
 - assuming executor success equals external success;
-- hiding partial or secondary effects behind a completed status;
+- hiding partial or secondary effects behind `completed`;
 - unlimited re-observation;
 - indefinite waiting for evidence;
 - automatic transfer to a more privileged executor;
@@ -79,7 +73,7 @@ The following are outside the v0.5 profile:
 - proof of legal, financial, physical, or social restoration;
 - proof that escalation was acted upon outside TACP.
 
-A deployment MAY provide external incident response, human review, or a new independently authorized process after escalation, but that process is outside the v0.5 remediation chain.
+A deployment MAY provide external incident response, human review, or a separately authorized process after escalation. That later process is outside the v0.5 remediation chain.
 
 ---
 
@@ -87,43 +81,19 @@ A deployment MAY provide external incident response, human review, or a new inde
 
 ## 4.1 Executor success is not remediation success
 
-An executor may report:
-
-```text
-succeeded
-```
-
-without the intended external state actually being achieved.
-
-Therefore, remediation completion MUST require independent post-remediation verification.
-
-A tool response, API acknowledgement, transaction submission, or executor receipt alone MUST NOT establish remediation completion.
-
----
+A tool response, API acknowledgement, transaction submission, execution receipt, or executor success claim alone MUST NOT establish remediation completion.
 
 ## 4.2 Post-remediation observation is required
 
-After a remediation execution attempt, the scout MUST obtain fresh post-remediation observations within declared freshness and time limits.
+After a remediation attempt, the scout MUST obtain fresh post-remediation observations within declared limits.
 
-The observations MUST distinguish:
+Observations SHOULD distinguish intended effect, observed target state, remaining source effect, newly introduced effect, unavailable evidence, contradictory evidence, and unresolved uncertainty.
 
-- intended effect;
-- observed target state;
-- remaining source effect;
-- newly introduced effect;
-- unavailable evidence;
-- contradictory evidence;
-- unresolved uncertainty.
+## 4.3 Verification classifies effect, not intention
 
-Repeated reading of the same stale evidence MUST NOT be treated as a fresh verification event.
+The analyst MUST classify the observed result from evidence rather than from the remediation plan's intent.
 
----
-
-## 4.3 Verification must classify effect, not intention
-
-The analyst MUST classify the observed remediation outcome from evidence rather than from the remediation plan's intent.
-
-A remediation result MUST be classified as exactly one of:
+The result MUST be exactly one of:
 
 ```text
 confirmed_effective
@@ -134,32 +104,13 @@ unresolved
 not_dispatched
 ```
 
-These classifications describe the observed remediation result, not moral judgment or policy desirability.
-
----
-
 ## 4.4 No silent success from uncertainty
 
-The following MUST NOT be converted to `confirmed_effective`:
-
-- missing evidence;
-- stale evidence;
-- conflicting evidence;
-- unknown target state;
-- uncertain execution outcome;
-- partial restoration;
-- evidence that only proves dispatch;
-- evidence that only proves tool-level acknowledgement.
-
-Unknown remains unknown until bounded verification resolves it.
-
----
+Missing, stale, conflicting, out-of-scope, temporally impossible, or insufficient evidence MUST NOT be converted to `confirmed_effective`.
 
 ## 4.5 No autonomous remediation chain
 
 A failed, partial, harmful, or unresolved remediation MUST NOT create another remediation operation under v0.5.
-
-The path is:
 
 ```text
 source effect
@@ -170,40 +121,23 @@ source effect
           -> escalated
 ```
 
-not:
+## 4.6 Escalation is terminal, not authority
 
-```text
-source effect
-  -> remediation A
-      -> remediation B
-          -> remediation C
-```
+Escalation records that the current remediation path has reached its boundary. It MUST NOT grant authority, imply human approval, or authorize another action.
 
 ---
 
-## 4.6 Escalation is a terminal protocol outcome
+# 5. Document Forms and Native Validation Scope
 
-Escalation records that the current TACP remediation path has reached its boundary.
-
-Escalation MUST NOT itself grant authority.
-
-Escalation MUST NOT imply that a human has reviewed the case.
-
-Escalation MUST NOT imply that another action is permitted.
-
-Any later action requires a separately defined process and independently valid authorization.
-
----
-
-# 5. Document Forms
-
-v0.5 defines three primary forms:
+The broader TACP v0.5 profile may contain inherited:
 
 1. `mission_bundle`
 2. `remediation_bundle`
 3. `remediation_outcome_bundle`
 
-The new v0.5 form is `remediation_outcome_bundle`.
+The **v0.5-native JSON Schema and semantic validator in this repository validate `remediation_outcome_bundle` only**.
+
+`mission_bundle` and `remediation_bundle` remain governed by the inherited earlier-version profiles unless and until a separate v0.5-native representation is defined for them.
 
 All v0.5-native records and bundles MUST declare:
 
@@ -211,7 +145,7 @@ All v0.5-native records and bundles MUST declare:
 "protocol_version": "0.5.0"
 ```
 
-A `remediation_outcome_bundle` MUST reference one completed or terminal remediation attempt and MUST NOT contain a second remediation mission.
+A `remediation_outcome_bundle` MUST reference one terminal remediation attempt and MUST NOT contain a second remediation mission.
 
 ---
 
@@ -226,20 +160,42 @@ A `remediation_outcome_bundle` contains:
 | `outcome_id` | Unique outcome identifier |
 | `remediation_ref` | Exact remediation being evaluated |
 | `remediation_operation_id` | Exact remediation operation identity |
+| `verification_limits` | Finite verification limits |
+| `terminal_policy` | Optional explicit terminal policy; required semantically for completed `not_dispatched` |
 | `records` | Ordered post-remediation records |
 | `extensions` | Optional non-authoritative object |
 
-The ordered `records` array contains exactly:
+The ordered `records` array MUST contain:
 
-1. `post_remediation_observation`
-2. `remediation_verification`
-3. `remediation_closure`
+1. **one or more** `post_remediation_observation` records;
+2. **exactly one** `remediation_verification` record;
+3. **exactly one final** `remediation_closure` record.
 
-Additional observations MAY be included before the final verification only when permitted by the declared verification limits.
+All observations MUST precede the verification. The closure MUST be final.
 
 ---
 
-# 7. Post-Remediation Observation
+# 7. Verification Limits
+
+Every outcome bundle MUST declare finite:
+
+- `max_observation_count`;
+- `max_verification_age_seconds`;
+- `final_verification_deadline`;
+- `observation_scope`;
+- `evidence_retrieval_budget`.
+
+`observation_scope` is authoritative for the bounded v0.5 observation phase. Every `target_refs` entry in every post-remediation observation MUST be contained in that declared scope.
+
+`evidence_retrieval_budget` bounds the number of unique evidence references consumed by the post-remediation observation phase in this repository profile.
+
+The protocol MUST NOT extend these limits autonomously.
+
+When a limit is exhausted before `confirmed_effective` can be established, the result MUST NOT be silently upgraded to success.
+
+---
+
+# 8. Post-Remediation Observation
 
 A `post_remediation_observation` records externally observed state after the remediation attempt.
 
@@ -249,9 +205,10 @@ It MUST contain at least:
 - `outcome_id`;
 - `remediation_ref`;
 - `remediation_operation_id`;
+- `created_at`;
 - `observed_at`;
 - `producer_id`;
-- `producer_role` equal to `scout`;
+- `producer_role: scout`;
 - `target_refs`;
 - `evidence_refs`;
 - `observed_effects`;
@@ -260,11 +217,11 @@ It MUST contain at least:
 
 The observation MUST NOT be produced solely from the executor's own success claim.
 
-The observation MAY cite the executor receipt as one evidence source but MUST distinguish that receipt from independent target-state evidence.
+An observation used by a verification MUST NOT occur after that verification's `evaluated_at`.
 
 ---
 
-# 8. Remediation Verification
+# 9. Remediation Verification
 
 A `remediation_verification` is produced by the analyst after reviewing fresh post-remediation observations.
 
@@ -277,94 +234,50 @@ It MUST contain:
 - `observation_refs`;
 - `evaluated_at`;
 - `producer_id`;
-- `producer_role` equal to `analyst`;
+- `producer_role: analyst`;
 - `result`;
 - `remaining_effects`;
 - `new_effects`;
 - `uncertainties`;
 - `reason`.
 
-`result` MUST be exactly one of:
+Every referenced observation MUST exist in the same outcome bundle.
 
-```text
-confirmed_effective
-confirmed_partially_effective
-confirmed_ineffective
-confirmed_harmful
-unresolved
-not_dispatched
-```
-
-The verification MUST preserve any source effect that still exists.
-
-The verification MUST separately identify newly introduced effects when evidence supports them.
+The verification MUST preserve any source effect that still exists and MUST separately identify newly introduced effects supported by evidence.
 
 ---
 
-# 9. Result Semantics
+# 10. Result Semantics
 
-## 9.1 `confirmed_effective`
+## 10.1 `confirmed_effective`
 
-Use only when fresh evidence supports all required remediation outcomes and no unresolved blocking effect remains within the remediation scope.
+Use only when fresh in-scope evidence supports all required remediation outcomes and no blocking remaining effect, new adverse effect, or unresolved uncertainty remains within the declared scope.
 
-This classification does not erase the original source effect from history.
+## 10.2 `confirmed_partially_effective`
 
----
+Use when the remediation produced some intended benefit but did not satisfy all required outcomes. It MUST escalate.
 
-## 9.2 `confirmed_partially_effective`
+## 10.3 `confirmed_ineffective`
 
-Use when the remediation produced a beneficial or intended effect but did not satisfy all required remediation outcomes.
+Use when evidence establishes that the remediation did not achieve the required result. It MUST escalate.
 
-A partial result MUST NOT close as `completed`.
+## 10.4 `confirmed_harmful`
 
-It requires escalation.
+Use when evidence establishes a new adverse effect attributable to the remediation. It MUST escalate and MUST NOT automatically authorize another correction.
 
----
+## 10.5 `unresolved`
 
-## 9.3 `confirmed_ineffective`
+Use when bounded verification cannot establish the result because of missing, conflicting, stale, inaccessible, or otherwise insufficient evidence, or because a verification limit is exhausted. It MUST escalate.
 
-Use when fresh evidence establishes that the remediation did not achieve the required result.
-
-It requires escalation.
-
----
-
-## 9.4 `confirmed_harmful`
-
-Use when fresh evidence establishes a new adverse effect attributable to the remediation operation.
-
-It requires escalation.
-
-A `confirmed_harmful` result MUST NOT automatically authorize containment or correction.
-
----
-
-## 9.5 `unresolved`
-
-Use when bounded verification cannot establish the remediation result.
-
-Examples include:
-
-- missing evidence;
-- conflicting evidence;
-- stale evidence;
-- inaccessible target;
-- unknown execution outcome;
-- verification deadline exhaustion.
-
-It requires escalation.
-
----
-
-## 9.6 `not_dispatched`
+## 10.6 `not_dispatched`
 
 Use only when authoritative evidence establishes that the remediation operation was never dispatched and produced no remediation execution effect.
 
-A local absence of an execution receipt alone is insufficient.
+Absence of a local execution receipt alone is insufficient.
 
 ---
 
-# 10. Remediation Closure
+# 11. Remediation Closure
 
 A `remediation_closure` terminates the v0.5 outcome path.
 
@@ -375,52 +288,34 @@ completed
 escalated
 ```
 
-`completed` is permitted only when verification result is:
+`confirmed_effective` MUST close as `completed` with `escalation_required: false`.
 
-```text
-confirmed_effective
+`confirmed_partially_effective`, `confirmed_ineffective`, `confirmed_harmful`, and `unresolved` MUST close as `escalated` with `escalation_required: true`.
+
+`not_dispatched` MAY close as `completed` **only when the bundle explicitly declares**:
+
+```json
+"terminal_policy": {
+  "not_dispatched": "completed"
+}
 ```
 
-or, when no remediation dispatch occurred and the enclosing policy explicitly treats that as a clean terminal outcome:
-
-```text
-not_dispatched
-```
-
-All other verification results MUST close as:
-
-```text
-escalated
-```
+Otherwise `not_dispatched` MUST NOT be silently treated as completed and MAY be escalated according to deployment policy.
 
 The closure MUST reference the exact verification record that determines its status.
 
 ---
 
-# 11. Escalation Record Requirements
+# 12. Escalation Requirements
 
-When closure status is `escalated`, the closure MUST contain:
+An escalated closure MUST include:
 
 - `reason_codes`;
 - `basis_refs`;
 - `escalation_required: true`;
-- `escalation_scope`;
+- nonempty `escalation_scope`;
 - `prohibited_automatic_actions`;
 - `reason`.
-
-`reason_codes` MAY include:
-
-```text
-partial_remediation
-ineffective_remediation
-harmful_remediation
-unresolved_remediation_outcome
-verification_deadline_reached
-evidence_stale
-evidence_conflict
-target_unavailable
-execution_outcome_unknown
-```
 
 `prohibited_automatic_actions` MUST include at least:
 
@@ -431,29 +326,13 @@ create_remediation_of_remediation
 self_expand_authority
 ```
 
-An implementation MAY add stricter prohibitions.
+Implementations MAY add stricter prohibition strings beyond this mandatory subset.
 
 ---
 
-# 12. Bounded Verification
+# 13. Record Ordering and Time
 
-Every remediation outcome process MUST declare finite limits for:
-
-- maximum observation count;
-- maximum verification age;
-- final verification deadline;
-- observation scope;
-- evidence retrieval budget.
-
-The protocol MUST NOT extend these limits autonomously.
-
-When a limit is exhausted before `confirmed_effective` can be established, the result MUST become `unresolved` and the closure MUST become `escalated`.
-
----
-
-# 13. Record Ordering
-
-The minimum valid successful path is:
+The minimum successful path is:
 
 ```text
 post_remediation_observation
@@ -461,7 +340,7 @@ post_remediation_observation
       -> remediation_closure(completed)
 ```
 
-The minimum valid escalation path is:
+The minimum escalation path is:
 
 ```text
 post_remediation_observation
@@ -469,9 +348,9 @@ post_remediation_observation
       -> remediation_closure(escalated)
 ```
 
-A closure MUST be the final v0.5 record in the bundle.
+All post-remediation observations MUST precede verification in record order and in evidence time. A verification MUST NOT rely on an observation whose `observed_at` is later than `evaluated_at`.
 
-No execution or remediation-plan record may appear after closure.
+A verification MUST NOT be finalized after `final_verification_deadline`.
 
 ---
 
@@ -487,34 +366,21 @@ remediation_operation_id
 
 A mismatch is invalid.
 
-The `remediation_operation_id` MUST equal the operation identity of the remediation that is being verified.
-
-It MUST NOT equal a newly invented operation identity intended for another corrective action.
+`remediation_operation_id` MUST equal the operation identity of the remediation being verified and MUST NOT be a newly invented identity for another corrective action.
 
 ---
 
 # 15. Source and Remediation Immutability
 
-v0.5 MUST NOT rewrite:
+v0.5 MUST NOT rewrite source mission records, source execution receipts, source closure, v0.4 impact assessment, v0.4 remediation plan, human review, remediation admission, or remediation execution history.
 
-- source mission records;
-- source execution receipts;
-- source closure;
-- v0.4 impact assessment;
-- v0.4 remediation plan;
-- human review;
-- remediation admission;
-- remediation execution history.
-
-Post-remediation observations and verification are additive records.
-
-Historical facts remain historical facts even if later state changes.
+Post-remediation observations, verification, and closure are additive records.
 
 ---
 
 # 16. Required Negative Cases
 
-A v0.5 conformance suite SHOULD include at least these rejection cases:
+A v0.5 conformance suite SHOULD include at least:
 
 1. `executor-success-without-verification`
 2. `completed-with-partial-effect`
@@ -530,48 +396,56 @@ A v0.5 conformance suite SHOULD include at least these rejection cases:
 12. `verification-after-deadline`
 13. `not-dispatched-with-execution-evidence`
 14. `new-effect-silently-omitted`
+15. `not-dispatched-without-terminal-policy`
+16. `observation-after-verification`
+17. `observation-outside-scope`
+18. `evidence-budget-exceeded`
 
-The suite SHOULD also include positive examples for:
-
-- effective remediation completed;
-- partial remediation escalated;
-- harmful remediation escalated;
-- unresolved remediation escalated;
-- authoritative non-dispatch closure.
+The suite SHOULD include positive examples for effective completion, partial escalation, harmful escalation, unresolved escalation, and authoritative non-dispatch completion under explicit terminal policy.
 
 ---
 
 # 17. Runtime Boundary
 
-Document validation can establish only recorded structure and semantic consistency.
+Document validation can establish recorded structure and semantic consistency only.
 
 It cannot independently prove:
 
-- that the external target actually changed;
-- that evidence is authentic;
-- that the scout is operationally independent from the executor;
-- that a remediation was globally unique;
-- that no external process launched a second remediation;
-- that escalation reached a human operator;
-- that runtime permissions were actually revoked or fenced;
-- that a harmful effect was fully contained.
+- external target truth;
+- evidence authenticity;
+- scout operational independence;
+- globally unique remediation;
+- absence of out-of-band second remediation;
+- actual privilege revocation or fencing;
+- successful delivery of escalation to a human operator;
+- containment of real harmful effects.
 
 Those properties require independent runtime enforcement and evidence systems.
 
 ---
 
-# 18. v0.5 Core Invariants
-
-A conforming v0.5 implementation MUST preserve the following invariants:
+# 18. Core Invariants
 
 ```text
 executor_success != remediation_success
 
 confirmed_effective
-    requires independent post-remediation evidence
+    requires independent, fresh, in-scope post-remediation evidence
 
 partial | ineffective | harmful | unresolved
     -> escalated
+
+not_dispatched + completed
+    requires explicit terminal policy
+
+observation_after_verification
+    -> invalid
+
+out_of_scope_observation
+    -> invalid
+
+evidence_budget_exceeded
+    -> invalid
 
 escalated
     != authorization
@@ -604,7 +478,8 @@ REMEDIATION_VERIFICATION
     |
     +--> confirmed_effective ------> COMPLETED
     |
-    +--> not_dispatched ----------> COMPLETED or ESCALATED by policy
+    +--> not_dispatched ----------> COMPLETED only by explicit policy
+    |                               or ESCALATED by policy
     |
     +--> partially_effective -----+
     +--> ineffective -------------+
@@ -624,10 +499,8 @@ TACP v0.4 answers:
 
 > **How may a system authorize a bounded corrective action after an external effect has already occurred?**
 
-TACP v0.5 answers the next question:
+TACP v0.5 answers:
 
-> **How does the system prove whether that remediation actually worked, and how does it stop safely when it did not?**
+> **How does the system determine whether that remediation actually worked, and how does it stop safely when it did not?**
 
-The v0.5 answer is intentionally conservative:
-
-> **Verify the external result independently. Complete only on confirmed effectiveness. Otherwise terminate the remediation chain and escalate without granting new authority.**
+The design objective is not recursive autonomy. It is bounded verification, explicit uncertainty, immutable history, and a terminal escalation boundary.
