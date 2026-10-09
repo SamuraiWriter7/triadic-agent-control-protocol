@@ -1,0 +1,87 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-new-effect-omitted-001",
+  "remediation_ref": "remediation-017",
+  "remediation_operation_id": "operation-remediation-017",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T03:00:00Z",
+    "observation_scope": [
+      "target://configuration/service-q"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-new-effect-omitted-001",
+      "outcome_id": "outcome-new-effect-omitted-001",
+      "remediation_ref": "remediation-017",
+      "remediation_operation_id": "operation-remediation-017",
+      "created_at": "2026-10-09T02:17:00Z",
+      "observed_at": "2026-10-09T02:16:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-q"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-q/post-remediation-001",
+        "evidence://monitor/service-q/latency-spike-001"
+      ],
+      "observed_effects": [
+        "The original unintended configuration is no longer present.",
+        "A new remediation-induced latency spike is present and affects service availability."
+      ],
+      "uncertainties": [],
+      "reason": "Fresh post-remediation evidence shows both the intended correction and a new adverse effect attributable to the remediation."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-new-effect-omitted-001",
+      "outcome_id": "outcome-new-effect-omitted-001",
+      "remediation_ref": "remediation-017",
+      "remediation_operation_id": "operation-remediation-017",
+      "created_at": "2026-10-09T02:18:00Z",
+      "evaluated_at": "2026-10-09T02:17:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-new-effect-omitted-001"
+      ],
+      "result": "confirmed_effective",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "This invalid fixture incorrectly declares the remediation fully effective while silently omitting the newly observed adverse effect."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-new-effect-omitted-001",
+      "outcome_id": "outcome-new-effect-omitted-001",
+      "remediation_ref": "remediation-017",
+      "remediation_operation_id": "operation-remediation-017",
+      "created_at": "2026-10-09T02:19:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-new-effect-omitted-001",
+      "status": "completed",
+      "reason_codes": [
+        "remediation_effective"
+      ],
+      "basis_refs": [
+        "verification-new-effect-omitted-001",
+        "observation-new-effect-omitted-001"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "This invalid fixture closes the remediation as completed even though fresh observation evidence contains a new adverse effect that verification omitted."
+    }
+  ]
+}
