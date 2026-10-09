@@ -1,0 +1,118 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-rejected-001",
+  "escalation_ref": "outcome://v0.5/escalated/remediation-021",
+  "remediation_ref": "remediation-021",
+  "remediation_operation_id": "operation-remediation-021",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T05:30:00Z",
+    "permitted_receiver_refs": [
+      "receiver://incident-response/team-beta"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 1800
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-rejected-001",
+      "handoff_id": "handoff-rejected-001",
+      "escalation_ref": "outcome://v0.5/escalated/remediation-021",
+      "remediation_ref": "remediation-021",
+      "remediation_operation_id": "operation-remediation-021",
+      "created_at": "2026-10-09T05:00:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://incident-response/team-beta",
+      "requested_scope": [
+        "review unresolved remediation outcome",
+        "determine whether a separately authorized incident-response action is required"
+      ],
+      "reason_codes": [
+        "unresolved_remediation_outcome"
+      ],
+      "basis_refs": [
+        "closure://v0.5/remediation-021/escalated",
+        "verification://v0.5/remediation-021/unresolved"
+      ],
+      "requested_by_authority_ref": "authority://tacp/escalation-controller",
+      "deadline": "2026-10-09T05:30:00Z",
+      "reason": "The v0.5 remediation path terminated as escalated, so responsibility review is requested from the permitted incident-response team without granting execution authority."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "delivery-rejected-001",
+      "handoff_id": "handoff-rejected-001",
+      "escalation_ref": "outcome://v0.5/escalated/remediation-021",
+      "remediation_ref": "remediation-021",
+      "remediation_operation_id": "operation-remediation-021",
+      "created_at": "2026-10-09T05:02:00Z",
+      "observed_at": "2026-10-09T05:01:45Z",
+      "producer_id": "transport-observer-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://incident-response/team-beta",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence://handoff-transport/team-beta/delivered-001"
+      ],
+      "uncertainties": [],
+      "reason": "Transport evidence confirms delivery of the handoff request, but delivery alone does not establish acceptance."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-rejected-001",
+      "handoff_id": "handoff-rejected-001",
+      "escalation_ref": "outcome://v0.5/escalated/remediation-021",
+      "remediation_ref": "remediation-021",
+      "remediation_operation_id": "operation-remediation-021",
+      "created_at": "2026-10-09T05:08:00Z",
+      "request_ref": "handoff-request-rejected-001",
+      "result": "rejected",
+      "receiver_ref": "receiver://incident-response/team-beta",
+      "accepted_scope": [],
+      "acceptance_evidence_refs": [],
+      "remaining_constraints": [
+        "No responsibility domain accepted the requested review within this handoff path."
+      ],
+      "disposition_evidence_refs": [
+        "evidence://incident-response/team-beta/rejection-001"
+      ],
+      "reason": "The intended receiver explicitly rejected responsibility for this escalation because the case falls outside its operational mandate."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-rejected-001",
+      "handoff_id": "handoff-rejected-001",
+      "escalation_ref": "outcome://v0.5/escalated/remediation-021",
+      "remediation_ref": "remediation-021",
+      "remediation_operation_id": "operation-remediation-021",
+      "created_at": "2026-10-09T05:09:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-rejected-001",
+      "status": "not_transferred",
+      "responsibility_transferred": false,
+      "remaining_responsibility_state": "handoff_rejected",
+      "basis_refs": [
+        "handoff-request-rejected-001",
+        "handoff-disposition-rejected-001",
+        "evidence://incident-response/team-beta/rejection-001"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Responsibility was not transferred because the permitted receiver explicitly rejected the handoff. The TACP autonomous path remains stopped and no automatic reassignment or remediation restart is authorized."
+    }
+  ]
+}
