@@ -2,7 +2,7 @@
 
 **Snapshot:** 2026-10-09
 
-GitHub Actions run #106 completed successfully on Python 3.10 and 3.12 for the registered v0.1-v0.4 validation suites.
+GitHub Actions run #134 completed successfully on Python 3.10 and 3.12 for the registered v0.1-v0.5 validation suites.
 
 | Version | Primary scope | Registered validation status |
 | --- | --- | --- |
@@ -10,6 +10,40 @@ GitHub Actions run #106 completed successfully on Python 3.10 and 3.12 for the r
 | 0.2.0 | Execution-time authorization and bounded held/expired/revoked/resource states | PASS |
 | 0.3.0 | Recovery, successor handling, and synthetic external-state negatives | PASS |
 | 0.4.0 | Human-reviewed remediation and compensation after confirmed effects | PASS |
+| 0.5.0 | Independent post-remediation verification and terminal escalation | PASS |
+
+## v0.5 registered suite
+
+The v0.5 suite currently contains:
+
+- 5 positive examples,
+- 14 negative examples,
+- 4 registered synthetic runtime negatives,
+- 19/19 matched expected outcomes in GitHub Actions run #134.
+
+The registered negative cases cover:
+
+- executor success without independent post-remediation observation,
+- partial remediation incorrectly closed as completed,
+- ineffective remediation incorrectly closed as completed,
+- harmful remediation incorrectly closed as completed,
+- unresolved remediation incorrectly closed as completed,
+- stale post-remediation evidence,
+- missing post-remediation observation,
+- remediation operation identity mismatch,
+- closure-to-verification reference mismatch,
+- automatic second remediation creation,
+- self-expansion of authority after remediation failure,
+- verification after the final verification deadline,
+- `not_dispatched` contradicted by execution evidence,
+- newly observed adverse effects omitted from verification.
+
+The registered synthetic runtime negatives are:
+
+- `second-remediation-created.json`,
+- `authority-expanded-after-failure.json`,
+- `not-dispatched-with-execution-evidence.json`,
+- `new-effect-silently-omitted.json`.
 
 ## v0.4 registered suite
 
@@ -35,9 +69,10 @@ The registered negative cases cover:
 
 ```bash
 python -m pip install -r requirements.txt
-python -m py_compile scripts/validate.py scripts/validate_legacy.py
+python -m py_compile scripts/validate.py scripts/validate_legacy.py scripts/validate_v05.py scripts/validate_v05_examples.py
 python scripts/validate.py --examples --json
 python scripts/validate.py --examples --version 0.4.0 --json
+python scripts/validate_v05_examples.py --json
 ```
 
 ## Interpretation of PASS
@@ -52,13 +87,15 @@ It does **not** establish production safety or complete protocol conformance. In
 - distributed claim uniqueness,
 - atomic cross-process enforcement,
 - executor isolation,
+- runtime privilege isolation after escalation,
+- actual escalation delivery to an authorized human process,
 - or deployment-specific policy correctness.
 
 Those properties require separate implementation, runtime, and security verification.
 
 ## Fixture classes
 
-Future fixtures should be classified explicitly as one of the following:
+Fixtures are classified explicitly as one of the following:
 
 1. **Conformant safe denial** — the document is valid and correctly denies or holds an unsafe operation.
 2. **Document nonconformance** — structure, references, chronology, or semantics contradict the protocol.
