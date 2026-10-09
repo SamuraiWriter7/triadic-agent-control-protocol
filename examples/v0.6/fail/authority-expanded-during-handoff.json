@@ -148,6 +148,9 @@
           "record_handoff_state",
           "resume_remediation_without_external_approval"
         ],
+        "added_scope": [
+          "resume_remediation_without_external_approval"
+        ],
         "reason": "The original controller self-added remediation authority while the handoff was still in progress."
       }
     ],
