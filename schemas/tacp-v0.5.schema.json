@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.org/tacp/schemas/tacp-v0.5.schema.json",
   "title": "TACP v0.5.0 Post-Remediation Verification and Escalation",
-  "description": "Structural validation for TACP v0.5.0 remediation outcome bundles. Semantic validation is required for result-to-closure consistency, chronological ordering, freshness, deadline handling, exact reference binding, evidence interpretation, omission of new effects, and prohibition of successor remediation.",
+  "description": "Structural validation for TACP v0.5.0 remediation outcome bundles. Semantic validation is required for result-to-closure consistency, chronological ordering, freshness, deadline handling, exact reference binding, observation scope, evidence retrieval budget, evidence interpretation, omission of new effects, terminal non-dispatch policy, and prohibition of successor remediation.",
   "$comment": "Strict JSON parsing is REQUIRED: reject duplicate object members and non-finite numbers. Date-time format assertion SHOULD be enabled. Document conformance does not prove evidence authenticity, external effect truth, scout independence, globally unique remediation, runtime privilege isolation, or that escalation reached an authorized human process.",
 
   "oneOf": [
@@ -48,6 +48,19 @@
     "extensions": {
       "type": "object",
       "description": "Optional non-authoritative extension data."
+    },
+
+    "terminal_policy": {
+      "type": "object",
+      "properties": {
+        "not_dispatched": {
+          "type": "string",
+          "enum": ["completed", "escalated"]
+        }
+      },
+      "required": ["not_dispatched"],
+      "additionalProperties": false,
+      "description": "Explicit bundle-level terminal policy. Semantic validation requires not_dispatched=completed before a not_dispatched verification may close as completed."
     },
 
     "verification_limits": {
@@ -217,15 +230,7 @@
         "escalation_scope": {"$ref": "#/$defs/string_list"},
         "prohibited_automatic_actions": {
           "type": "array",
-          "items": {
-            "type": "string",
-            "enum": [
-              "repeat_source_operation",
-              "repeat_remediation_operation",
-              "create_remediation_of_remediation",
-              "self_expand_authority"
-            ]
-          },
+          "items": {"$ref": "#/$defs/nonempty_string"},
           "uniqueItems": true
         },
         "reason": {"$ref": "#/$defs/nonempty_string"},
@@ -251,7 +256,7 @@
         "reason"
       ],
       "additionalProperties": false,
-      "$comment": "The semantic validator MUST enforce status/result consistency, escalation_required semantics, required escalation scope, and the mandatory prohibition set for escalated closures."
+      "$comment": "The semantic validator MUST enforce status/result consistency, escalation_required semantics, required escalation scope, and the mandatory prohibition subset for escalated closures. Additional stricter prohibition strings are permitted."
     },
 
     "remediation_outcome_record": {
@@ -271,6 +276,7 @@
         "remediation_ref": {"$ref": "#/$defs/reference"},
         "remediation_operation_id": {"$ref": "#/$defs/nonempty_string"},
         "verification_limits": {"$ref": "#/$defs/verification_limits"},
+        "terminal_policy": {"$ref": "#/$defs/terminal_policy"},
         "records": {
           "type": "array",
           "items": {"$ref": "#/$defs/remediation_outcome_record"},
@@ -288,7 +294,7 @@
         "records"
       ],
       "additionalProperties": false,
-      "$comment": "The semantic validator MUST require one or more observations followed by exactly one remediation_verification and exactly one final remediation_closure; all records must bind the bundle identity and remediation identity."
+      "$comment": "The semantic validator MUST require one or more observations followed by exactly one remediation_verification and exactly one final remediation_closure; all records must bind the bundle identity and remediation identity. terminal_policy is optional except that completed not_dispatched closure requires explicit not_dispatched=completed."
     }
   }
 }
