@@ -1,0 +1,89 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-remediation-not-dispatched-001",
+  "remediation_ref": "remediation-005",
+  "remediation_operation_id": "operation-remediation-005",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T02:10:00Z",
+    "observation_scope": [
+      "target://configuration/service-e"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-remediation-not-dispatched-001",
+      "outcome_id": "outcome-remediation-not-dispatched-001",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T01:43:00Z",
+      "observed_at": "2026-10-09T01:42:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-e"
+      ],
+      "evidence_refs": [
+        "evidence://dispatch-ledger/remediation-005/not-dispatched",
+        "evidence://execution-fence/remediation-005/no-claim",
+        "evidence://snapshot/service-e/pre-existing-state"
+      ],
+      "observed_effects": [
+        "Authoritative dispatch records show that the remediation operation was not dispatched.",
+        "No execution claim was consumed for the remediation operation.",
+        "No remediation execution effect is observed on the target."
+      ],
+      "uncertainties": [],
+      "reason": "Independent authoritative dispatch and fence evidence establishes that the remediation operation never crossed the execution boundary."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-remediation-not-dispatched-001",
+      "outcome_id": "outcome-remediation-not-dispatched-001",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T01:44:00Z",
+      "evaluated_at": "2026-10-09T01:43:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-remediation-not-dispatched-001"
+      ],
+      "result": "not_dispatched",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "Authoritative dispatch-state evidence confirms that the remediation operation was never dispatched and produced no remediation execution effect."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-remediation-not-dispatched-001",
+      "outcome_id": "outcome-remediation-not-dispatched-001",
+      "remediation_ref": "remediation-005",
+      "remediation_operation_id": "operation-remediation-005",
+      "created_at": "2026-10-09T01:45:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-remediation-not-dispatched-001",
+      "status": "completed",
+      "reason_codes": [
+        "remediation_not_dispatched"
+      ],
+      "basis_refs": [
+        "verification-remediation-not-dispatched-001",
+        "observation-remediation-not-dispatched-001"
+      ],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "The outcome path closes cleanly because authoritative evidence establishes non-dispatch and no remediation execution effect. This closure does not authorize a retry."
+    }
+  ]
+}
