@@ -1,0 +1,133 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-v06-scope-overreach-001",
+  "escalation_ref": "v0.5:outcome:scope-overreach-001:closure",
+  "remediation_ref": "v0.4:remediation:scope-overreach-001",
+  "remediation_operation_id": "rem-op-scope-overreach-001",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T06:30:00Z",
+    "permitted_receiver_refs": [
+      "receiver:human:incident-commander-7"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 5,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-scope-overreach-001",
+      "handoff_id": "handoff-v06-scope-overreach-001",
+      "escalation_ref": "v0.5:outcome:scope-overreach-001:closure",
+      "remediation_ref": "v0.4:remediation:scope-overreach-001",
+      "remediation_operation_id": "rem-op-scope-overreach-001",
+      "created_at": "2026-10-09T06:00:00Z",
+      "producer_id": "controller-main",
+      "producer_role": "controller",
+      "receiver_ref": "receiver:human:incident-commander-7",
+      "requested_scope": [
+        "review_incident_state",
+        "coordinate_manual_containment"
+      ],
+      "reason_codes": [
+        "post_remediation_escalation"
+      ],
+      "basis_refs": [
+        "v0.5:outcome:scope-overreach-001:verification",
+        "v0.5:outcome:scope-overreach-001:closure"
+      ],
+      "requested_by_authority_ref": "authority:tacp-controller:handoff-only",
+      "deadline": "2026-10-09T06:30:00Z",
+      "reason": "Transfer responsibility for review and manual containment coordination only."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "delivery-scope-overreach-001",
+      "handoff_id": "handoff-v06-scope-overreach-001",
+      "escalation_ref": "v0.5:outcome:scope-overreach-001:closure",
+      "remediation_ref": "v0.4:remediation:scope-overreach-001",
+      "remediation_operation_id": "rem-op-scope-overreach-001",
+      "created_at": "2026-10-09T06:02:00Z",
+      "observed_at": "2026-10-09T06:01:45Z",
+      "producer_id": "transport-observer-1",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver:human:incident-commander-7",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence:handoff-delivery:scope-overreach-001"
+      ],
+      "uncertainties": [],
+      "reason": "The handoff request was delivered to the intended receiver."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-scope-overreach-001",
+      "handoff_id": "handoff-v06-scope-overreach-001",
+      "escalation_ref": "v0.5:outcome:scope-overreach-001:closure",
+      "remediation_ref": "v0.4:remediation:scope-overreach-001",
+      "remediation_operation_id": "rem-op-scope-overreach-001",
+      "created_at": "2026-10-09T06:05:00Z",
+      "request_ref": "handoff-request-scope-overreach-001",
+      "result": "accepted",
+      "receiver_id": "incident-commander-7",
+      "receiver_type": "human",
+      "receiver_ref": "receiver:human:incident-commander-7",
+      "receiver_authority_ref": "authority:incident-command:manual-response",
+      "accepted_scope": [
+        "review_incident_state",
+        "coordinate_manual_containment",
+        "authorize_privileged_executor_restart"
+      ],
+      "accepted_at": "2026-10-09T06:04:30Z",
+      "acceptance_evidence_refs": [
+        "evidence:acceptance-receipt:scope-overreach-001"
+      ],
+      "remaining_constraints": [
+        "No automatic TACP remediation restart is authorized."
+      ],
+      "disposition_evidence_refs": [
+        "evidence:acceptance-receipt:scope-overreach-001"
+      ],
+      "reason": "Receiver accepted a scope broader than the handoff request by adding authority to restart a privileged executor."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-scope-overreach-001",
+      "handoff_id": "handoff-v06-scope-overreach-001",
+      "escalation_ref": "v0.5:outcome:scope-overreach-001:closure",
+      "remediation_ref": "v0.4:remediation:scope-overreach-001",
+      "remediation_operation_id": "rem-op-scope-overreach-001",
+      "created_at": "2026-10-09T06:06:00Z",
+      "producer_id": "controller-main",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-scope-overreach-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver:human:incident-commander-7",
+      "receiver_authority_ref": "authority:incident-command:manual-response",
+      "accepted_scope": [
+        "review_incident_state",
+        "coordinate_manual_containment",
+        "authorize_privileged_executor_restart"
+      ],
+      "basis_refs": [
+        "handoff-request-scope-overreach-001",
+        "handoff-disposition-scope-overreach-001"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "This document is intentionally nonconformant because accepted scope exceeds requested scope."
+    }
+  ]
+}
