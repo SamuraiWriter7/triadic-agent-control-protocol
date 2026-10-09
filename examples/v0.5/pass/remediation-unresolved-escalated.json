@@ -1,0 +1,99 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-remediation-unresolved-001",
+  "remediation_ref": "remediation-004",
+  "remediation_operation_id": "operation-remediation-004",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T02:00:00Z",
+    "observation_scope": [
+      "target://configuration/service-d"
+    ],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-remediation-unresolved-001",
+      "outcome_id": "outcome-remediation-unresolved-001",
+      "remediation_ref": "remediation-004",
+      "remediation_operation_id": "operation-remediation-004",
+      "created_at": "2026-10-09T01:39:00Z",
+      "observed_at": "2026-10-09T01:38:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": [
+        "target://configuration/service-d"
+      ],
+      "evidence_refs": [
+        "evidence://snapshot/service-d/post-remediation-001",
+        "evidence://audit/service-d/post-remediation-001"
+      ],
+      "observed_effects": [
+        "One evidence source reports the intended remediation state.",
+        "A second evidence source cannot confirm the same target state."
+      ],
+      "uncertainties": [
+        "The post-remediation target state cannot be established consistently from the available evidence."
+      ],
+      "reason": "Fresh evidence is contradictory and does not support a definitive remediation result."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-remediation-unresolved-001",
+      "outcome_id": "outcome-remediation-unresolved-001",
+      "remediation_ref": "remediation-004",
+      "remediation_operation_id": "operation-remediation-004",
+      "created_at": "2026-10-09T01:40:00Z",
+      "evaluated_at": "2026-10-09T01:39:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": [
+        "observation-remediation-unresolved-001"
+      ],
+      "result": "unresolved",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [
+        "Conflicting post-remediation evidence prevents confirmation of effectiveness or ineffectiveness."
+      ],
+      "reason": "The bounded verification process cannot establish a reliable remediation outcome from the available evidence."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-remediation-unresolved-001",
+      "outcome_id": "outcome-remediation-unresolved-001",
+      "remediation_ref": "remediation-004",
+      "remediation_operation_id": "operation-remediation-004",
+      "created_at": "2026-10-09T01:41:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-remediation-unresolved-001",
+      "status": "escalated",
+      "reason_codes": [
+        "unresolved_remediation_outcome",
+        "evidence_conflict"
+      ],
+      "basis_refs": [
+        "verification-remediation-unresolved-001",
+        "observation-remediation-unresolved-001"
+      ],
+      "escalation_required": true,
+      "escalation_scope": [
+        "Resolve the conflicting evidence outside this remediation chain before any separately authorized follow-on action is considered."
+      ],
+      "prohibited_automatic_actions": [
+        "repeat_source_operation",
+        "repeat_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority"
+      ],
+      "reason": "The remediation path terminates as escalated because bounded verification could not determine the external outcome. Uncertainty is preserved rather than converted into success."
+    }
+  ]
+}
