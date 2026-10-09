@@ -1,4 +1,4 @@
-name: Validate TACP v0.1-v0.4
+name: Validate TACP v0.1-v0.5
 
 on:
   push:
@@ -49,6 +49,8 @@ jobs:
         run: |
           python -m py_compile scripts/validate.py
           python -m py_compile scripts/validate_legacy.py
+          python -m py_compile scripts/validate_v05.py
+          python -m py_compile scripts/validate_v05_examples.py
 
       - name: Validate v0.1 examples
         run: |
@@ -88,6 +90,14 @@ jobs:
             --version 0.4.0 \
             --json \
             | tee "$RUNNER_TEMP/tacp-0.4.0.json"
+
+      - name: Validate v0.5 examples and synthetic runtime cases
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          python scripts/validate_v05_examples.py \
+            --json \
+            | tee "$RUNNER_TEMP/tacp-0.5.0.json"
 
       - name: Check CLI rejection and document-only scope
         if: ${{ !cancelled() }}
@@ -207,6 +217,7 @@ jobs:
               "0.2.0",
               "0.3.0",
               "0.4.0",
+              "0.5.0",
           )
 
           expected_runtime_fixtures = {
@@ -217,6 +228,12 @@ jobs:
               },
               "0.4.0": {
                   "duplicate-remediation.json",
+              },
+              "0.5.0": {
+                  "second-remediation-created.json",
+                  "authority-expanded-after-failure.json",
+                  "not-dispatched-with-execution-evidence.json",
+                  "new-effect-silently-omitted.json",
               },
           }
 
@@ -241,8 +258,9 @@ jobs:
                       if row["validation_scope"] == "synthetic_runtime_fixture"
                   ]
 
+                  expected_mode = "v0.5-examples" if version == "0.5.0" else "examples"
                   complete = (
-                      report["mode"] == "examples"
+                      report["mode"] == expected_mode
                       and report["total"] == len(rows)
                       and len(rows) > 0
                       and report["matched"] == len(rows)
@@ -263,7 +281,7 @@ jobs:
                           for row in runtime
                       )
 
-                  if version in {"0.3.0", "0.4.0"}:
+                  if version in {"0.3.0", "0.4.0", "0.5.0"}:
                       reject_rows = [
                           row
                           for row in rows
