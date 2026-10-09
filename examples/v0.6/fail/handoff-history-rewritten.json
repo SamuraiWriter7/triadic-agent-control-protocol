@@ -52,6 +52,7 @@
       "remediation_ref": "remediation-003",
       "remediation_operation_id": "operation-remediation-003",
       "created_at": "2026-10-09T08:21:00Z",
+      "observed_at": "2026-10-09T08:20:45Z",
       "producer_id": "transport://handoff-relay-01",
       "producer_role": "transport_observer",
       "receiver_ref": "receiver://human/incident-commander-01",
@@ -59,7 +60,8 @@
       "evidence_refs": [
         "receipt://transport/delivery-history-rewrite-001"
       ],
-      "uncertainties": []
+      "uncertainties": [],
+      "reason": "Transport evidence records delivery to the declared receiver; it does not by itself establish acceptance."
     },
     {
       "protocol_version": "0.6.0",
@@ -132,6 +134,7 @@
     }
   ],
   "extensions": {
+    "synthetic_runtime_case": true,
     "runtime_events": [
       {
         "event_id": "runtime-history-rewrite-001",
