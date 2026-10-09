@@ -1,0 +1,137 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-external-process-001",
+  "escalation_ref": "closure-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T05:30:00Z",
+    "permitted_receiver_refs": [
+      "receiver://incident-response/system-alpha"
+    ],
+    "max_delivery_observation_count": 2,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-external-process-001",
+      "handoff_id": "handoff-external-process-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T05:00:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://incident-response/system-alpha",
+      "requested_scope": [
+        "Review the escalated remediation outcome.",
+        "Assume responsibility for incident coordination within the external incident-response domain."
+      ],
+      "reason_codes": [
+        "harmful_remediation",
+        "external_handoff_required"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-001",
+        "verification-remediation-harmful-001"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation",
+      "deadline": "2026-10-09T05:30:00Z",
+      "reason": "The v0.5 remediation path terminated as escalated and requires transfer to a separately governed incident-response process."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "handoff-delivery-external-process-001",
+      "handoff_id": "handoff-external-process-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T05:01:00Z",
+      "observed_at": "2026-10-09T05:00:45Z",
+      "producer_id": "transport-observer-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://incident-response/system-alpha",
+      "delivery_state": "transport_acknowledged",
+      "evidence_refs": [
+        "evidence://handoff-transport/system-alpha/request-001"
+      ],
+      "uncertainties": [
+        "Transport acknowledgement alone does not establish responsibility acceptance."
+      ],
+      "reason": "The handoff request reached the external process transport boundary, but responsibility transfer is not inferred from delivery."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-external-process-001",
+      "handoff_id": "handoff-external-process-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T05:03:00Z",
+      "request_ref": "handoff-request-external-process-001",
+      "result": "accepted",
+      "receiver_id": "incident-response-system-alpha",
+      "receiver_type": "external_process",
+      "receiver_ref": "receiver://incident-response/system-alpha",
+      "receiver_authority_ref": "authority://incident-response/system-alpha/intake",
+      "accepted_scope": [
+        "Review the escalated remediation outcome.",
+        "Assume responsibility for incident coordination within the external incident-response domain."
+      ],
+      "accepted_at": "2026-10-09T05:02:30Z",
+      "acceptance_evidence_refs": [
+        "evidence://incident-response/system-alpha/acceptance-receipt-001"
+      ],
+      "remaining_constraints": [
+        "Acceptance does not authorize TACP execution or restart autonomous remediation.",
+        "Any corrective action requires independent authorization under the external process."
+      ],
+      "disposition_evidence_refs": [
+        "evidence://incident-response/system-alpha/acceptance-receipt-001",
+        "evidence://authority-registry/system-alpha/intake"
+      ],
+      "reason": "The external incident-response process explicitly accepted responsibility for the requested scope under its own independently attributable authority."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-external-process-001",
+      "handoff_id": "handoff-external-process-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T05:04:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-external-process-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://incident-response/system-alpha",
+      "receiver_authority_ref": "authority://incident-response/system-alpha/intake",
+      "accepted_scope": [
+        "Review the escalated remediation outcome.",
+        "Assume responsibility for incident coordination within the external incident-response domain."
+      ],
+      "basis_refs": [
+        "handoff-request-external-process-001",
+        "handoff-disposition-external-process-001",
+        "evidence://incident-response/system-alpha/acceptance-receipt-001"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Responsibility transfer is recorded only after explicit external-process acceptance. The original TACP autonomous path remains stopped."
+    }
+  ]
+}
