@@ -1,0 +1,70 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-observation-outside-scope-001",
+  "remediation_ref": "remediation-020",
+  "remediation_operation_id": "operation-remediation-020",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T03:30:00Z",
+    "observation_scope": ["target://configuration/service-t"],
+    "evidence_retrieval_budget": 5
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-outside-scope-001",
+      "outcome_id": "outcome-observation-outside-scope-001",
+      "remediation_ref": "remediation-020",
+      "remediation_operation_id": "operation-remediation-020",
+      "created_at": "2026-10-09T02:55:00Z",
+      "observed_at": "2026-10-09T02:54:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": ["target://configuration/service-u"],
+      "evidence_refs": ["evidence://snapshot/service-u/post-remediation-001"],
+      "observed_effects": ["An out-of-scope target appears healthy."],
+      "uncertainties": [],
+      "reason": "This invalid fixture observes a target outside the declared verification scope."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-observation-outside-scope-001",
+      "outcome_id": "outcome-observation-outside-scope-001",
+      "remediation_ref": "remediation-020",
+      "remediation_operation_id": "operation-remediation-020",
+      "created_at": "2026-10-09T02:56:00Z",
+      "evaluated_at": "2026-10-09T02:55:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": ["observation-outside-scope-001"],
+      "result": "confirmed_effective",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "This invalid fixture derives effectiveness from an observation outside the bounded scope."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-observation-outside-scope-001",
+      "outcome_id": "outcome-observation-outside-scope-001",
+      "remediation_ref": "remediation-020",
+      "remediation_operation_id": "operation-remediation-020",
+      "created_at": "2026-10-09T02:57:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-observation-outside-scope-001",
+      "status": "completed",
+      "reason_codes": ["remediation_effective"],
+      "basis_refs": ["verification-observation-outside-scope-001", "observation-outside-scope-001"],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "This invalid fixture closes the remediation using out-of-scope evidence."
+    }
+  ]
+}
