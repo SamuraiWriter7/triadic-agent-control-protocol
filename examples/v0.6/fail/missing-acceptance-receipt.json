@@ -1,0 +1,131 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-v06-missing-acceptance-receipt-001",
+  "escalation_ref": "outcome-v05-escalated-201",
+  "remediation_ref": "remediation-v04-201",
+  "remediation_operation_id": "remediation-op-201",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T06:00:00Z",
+    "permitted_receiver_refs": [
+      "receiver:human-incident-operator-201"
+    ],
+    "max_delivery_observation_count": 2,
+    "evidence_retrieval_budget": 4,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-201",
+      "handoff_id": "handoff-v06-missing-acceptance-receipt-001",
+      "escalation_ref": "outcome-v05-escalated-201",
+      "remediation_ref": "remediation-v04-201",
+      "remediation_operation_id": "remediation-op-201",
+      "created_at": "2026-10-09T05:20:00Z",
+      "producer_id": "tacp-controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver:human-incident-operator-201",
+      "requested_scope": [
+        "incident_review",
+        "responsibility_acceptance"
+      ],
+      "reason_codes": [
+        "v05_terminal_escalation",
+        "human_review_required"
+      ],
+      "basis_refs": [
+        "outcome-v05-escalated-201"
+      ],
+      "requested_by_authority_ref": "authority:tacp-controller-policy-01",
+      "deadline": "2026-10-09T06:00:00Z",
+      "reason": "The v0.5 path ended in escalation and requires an attributable external responsibility handoff."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "handoff-delivery-201",
+      "handoff_id": "handoff-v06-missing-acceptance-receipt-001",
+      "escalation_ref": "outcome-v05-escalated-201",
+      "remediation_ref": "remediation-v04-201",
+      "remediation_operation_id": "remediation-op-201",
+      "created_at": "2026-10-09T05:21:00Z",
+      "observed_at": "2026-10-09T05:20:45Z",
+      "producer_id": "transport-observer-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver:human-incident-operator-201",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence:delivery-receipt-201"
+      ],
+      "uncertainties": [
+        "delivery receipt proves transport only and does not prove responsibility acceptance"
+      ],
+      "reason": "The handoff request reached the receiver endpoint, but no authoritative acceptance receipt was recorded."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-201",
+      "handoff_id": "handoff-v06-missing-acceptance-receipt-001",
+      "escalation_ref": "outcome-v05-escalated-201",
+      "remediation_ref": "remediation-v04-201",
+      "remediation_operation_id": "remediation-op-201",
+      "created_at": "2026-10-09T05:30:00Z",
+      "request_ref": "handoff-request-201",
+      "result": "accepted",
+      "receiver_id": "human-incident-operator-201",
+      "receiver_type": "human",
+      "receiver_ref": "receiver:human-incident-operator-201",
+      "receiver_authority_ref": "authority:incident-response-human-201",
+      "accepted_scope": [
+        "incident_review",
+        "responsibility_acceptance"
+      ],
+      "accepted_at": "2026-10-09T05:29:00Z",
+      "acceptance_evidence_refs": [],
+      "remaining_constraints": [
+        "no execution authority is granted by this handoff"
+      ],
+      "disposition_evidence_refs": [
+        "evidence:delivery-receipt-201"
+      ],
+      "reason": "Invalid negative case: the disposition claims accepted even though no explicit acceptance receipt exists."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-201",
+      "handoff_id": "handoff-v06-missing-acceptance-receipt-001",
+      "escalation_ref": "outcome-v05-escalated-201",
+      "remediation_ref": "remediation-v04-201",
+      "remediation_operation_id": "remediation-op-201",
+      "created_at": "2026-10-09T05:31:00Z",
+      "producer_id": "tacp-controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-201",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver:human-incident-operator-201",
+      "receiver_authority_ref": "authority:incident-response-human-201",
+      "accepted_scope": [
+        "incident_review",
+        "responsibility_acceptance"
+      ],
+      "basis_refs": [
+        "handoff-disposition-201",
+        "evidence:delivery-receipt-201"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Invalid negative case: responsibility is marked transferred without any authoritative acceptance evidence."
+    }
+  ]
+}
