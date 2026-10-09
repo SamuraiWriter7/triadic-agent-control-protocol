@@ -1,0 +1,154 @@
+{
+  "protocol_version": "0.6.0",
+  "document_type": "escalation_handoff_bundle",
+  "handoff_id": "handoff-authority-expanded-001",
+  "escalation_ref": "closure-remediation-harmful-001",
+  "remediation_ref": "remediation-003",
+  "remediation_operation_id": "operation-remediation-003",
+  "handoff_limits": {
+    "final_handoff_deadline": "2026-10-09T06:30:00Z",
+    "permitted_receiver_refs": [
+      "receiver://human/incident-commander-01"
+    ],
+    "max_delivery_observation_count": 3,
+    "evidence_retrieval_budget": 6,
+    "max_acceptance_age_seconds": 900
+  },
+  "records": [
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_request",
+      "record_id": "handoff-request-authority-expanded-001",
+      "handoff_id": "handoff-authority-expanded-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:00:00Z",
+      "producer_id": "controller://tacp/controller-01",
+      "producer_role": "controller",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "requested_scope": [
+        "review_harmful_remediation_outcome",
+        "decide_whether_separate_authorized_incident_response_is_required"
+      ],
+      "reason_codes": [
+        "remediation_confirmed_harmful",
+        "autonomous_path_stopped"
+      ],
+      "basis_refs": [
+        "closure-remediation-harmful-001",
+        "verification-remediation-harmful-001"
+      ],
+      "requested_by_authority_ref": "authority://tacp/controller-escalation-policy-01",
+      "deadline": "2026-10-09T06:30:00Z",
+      "reason": "Escalate the case for independent human review without granting new execution authority to the original TACP path."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_delivery_observation",
+      "record_id": "handoff-delivery-authority-expanded-001",
+      "handoff_id": "handoff-authority-expanded-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:01:00Z",
+      "producer_id": "transport://handoff-gateway-01",
+      "producer_role": "transport_observer",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "delivery_state": "delivered",
+      "evidence_refs": [
+        "evidence://transport/delivery-authority-expanded-001"
+      ],
+      "uncertainties": []
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_disposition",
+      "record_id": "handoff-disposition-authority-expanded-001",
+      "handoff_id": "handoff-authority-expanded-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:04:00Z",
+      "request_ref": "handoff-request-authority-expanded-001",
+      "result": "accepted",
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_id": "incident-commander-01",
+      "receiver_type": "human",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "review_harmful_remediation_outcome",
+        "decide_whether_separate_authorized_incident_response_is_required"
+      ],
+      "accepted_at": "2026-10-09T06:03:30Z",
+      "acceptance_evidence_refs": [
+        "evidence://acceptance/incident-commander-01"
+      ],
+      "remaining_constraints": [
+        "acceptance_does_not_authorize_original_executor_restart",
+        "new_incident_response_requires_separate_authorization"
+      ],
+      "disposition_evidence_refs": [
+        "evidence://authority-registry/incident-command-duty-01"
+      ],
+      "reason": "Receiver explicitly accepts review responsibility under an independently attributable incident-command authority."
+    },
+    {
+      "protocol_version": "0.6.0",
+      "record_type": "handoff_closure",
+      "record_id": "handoff-closure-authority-expanded-001",
+      "handoff_id": "handoff-authority-expanded-001",
+      "escalation_ref": "closure-remediation-harmful-001",
+      "remediation_ref": "remediation-003",
+      "remediation_operation_id": "operation-remediation-003",
+      "created_at": "2026-10-09T06:05:00Z",
+      "producer_id": "controller://tacp/controller-01",
+      "producer_role": "controller",
+      "disposition_ref": "handoff-disposition-authority-expanded-001",
+      "status": "transferred",
+      "responsibility_transferred": true,
+      "receiver_ref": "receiver://human/incident-commander-01",
+      "receiver_authority_ref": "authority://organization/incident-command-duty-01",
+      "accepted_scope": [
+        "review_harmful_remediation_outcome",
+        "decide_whether_separate_authorized_incident_response_is_required"
+      ],
+      "basis_refs": [
+        "handoff-request-authority-expanded-001",
+        "handoff-disposition-authority-expanded-001",
+        "evidence://acceptance/incident-commander-01"
+      ],
+      "prohibited_automatic_actions": [
+        "restart_source_operation",
+        "restart_remediation_operation",
+        "create_remediation_of_remediation",
+        "self_expand_authority",
+        "self_accept_handoff",
+        "assume_acceptance_from_delivery"
+      ],
+      "reason": "Responsibility transfer is recorded, but the original TACP controller later expands its own authority during the handoff lifecycle."
+    }
+  ],
+  "extensions": {
+    "synthetic_runtime_case": true,
+    "runtime_events": [
+      {
+        "event_type": "authority_scope_changed",
+        "event_id": "runtime-authority-expansion-001",
+        "occurred_at": "2026-10-09T06:02:30Z",
+        "actor_id": "controller://tacp/controller-01",
+        "authority_before": [
+          "prepare_handoff",
+          "record_handoff_state"
+        ],
+        "authority_after": [
+          "prepare_handoff",
+          "record_handoff_state",
+          "resume_remediation_without_external_approval"
+        ],
+        "reason": "The original controller self-added remediation authority while the handoff was still in progress."
+      }
+    ],
+    "expected_failure": "authority_expanded_during_handoff"
+  }
+}
