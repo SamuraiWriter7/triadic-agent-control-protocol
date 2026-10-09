@@ -1,0 +1,73 @@
+{
+  "protocol_version": "0.5.0",
+  "document_type": "remediation_outcome_bundle",
+  "outcome_id": "outcome-evidence-budget-exceeded-001",
+  "remediation_ref": "remediation-021",
+  "remediation_operation_id": "operation-remediation-021",
+  "verification_limits": {
+    "max_observation_count": 3,
+    "max_verification_age_seconds": 900,
+    "final_verification_deadline": "2026-10-09T03:30:00Z",
+    "observation_scope": ["target://configuration/service-v"],
+    "evidence_retrieval_budget": 1
+  },
+  "records": [
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "post_remediation_observation",
+      "record_id": "observation-evidence-budget-exceeded-001",
+      "outcome_id": "outcome-evidence-budget-exceeded-001",
+      "remediation_ref": "remediation-021",
+      "remediation_operation_id": "operation-remediation-021",
+      "created_at": "2026-10-09T03:00:00Z",
+      "observed_at": "2026-10-09T02:59:45Z",
+      "producer_id": "scout-01",
+      "producer_role": "scout",
+      "target_refs": ["target://configuration/service-v"],
+      "evidence_refs": [
+        "evidence://snapshot/service-v/post-remediation-001",
+        "evidence://audit/service-v/post-remediation-001"
+      ],
+      "observed_effects": ["The target appears to match the remediation objective."],
+      "uncertainties": [],
+      "reason": "This invalid fixture consumes two unique evidence references despite a retrieval budget of one."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_verification",
+      "record_id": "verification-evidence-budget-exceeded-001",
+      "outcome_id": "outcome-evidence-budget-exceeded-001",
+      "remediation_ref": "remediation-021",
+      "remediation_operation_id": "operation-remediation-021",
+      "created_at": "2026-10-09T03:01:00Z",
+      "evaluated_at": "2026-10-09T03:00:45Z",
+      "producer_id": "analyst-01",
+      "producer_role": "analyst",
+      "observation_refs": ["observation-evidence-budget-exceeded-001"],
+      "result": "confirmed_effective",
+      "remaining_effects": [],
+      "new_effects": [],
+      "uncertainties": [],
+      "reason": "This invalid fixture treats verification as valid after exceeding the bounded evidence retrieval budget."
+    },
+    {
+      "protocol_version": "0.5.0",
+      "record_type": "remediation_closure",
+      "record_id": "closure-evidence-budget-exceeded-001",
+      "outcome_id": "outcome-evidence-budget-exceeded-001",
+      "remediation_ref": "remediation-021",
+      "remediation_operation_id": "operation-remediation-021",
+      "created_at": "2026-10-09T03:02:00Z",
+      "producer_id": "controller-01",
+      "producer_role": "controller",
+      "verification_ref": "verification-evidence-budget-exceeded-001",
+      "status": "completed",
+      "reason_codes": ["remediation_effective"],
+      "basis_refs": ["verification-evidence-budget-exceeded-001", "observation-evidence-budget-exceeded-001"],
+      "escalation_required": false,
+      "escalation_scope": [],
+      "prohibited_automatic_actions": [],
+      "reason": "This invalid fixture closes the remediation after exceeding the declared evidence budget."
+    }
+  ]
+}
